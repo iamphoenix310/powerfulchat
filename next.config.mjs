@@ -1,3 +1,5 @@
+import path from 'path'
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -12,9 +14,16 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'lh3.googleusercontent.com',
         port: '',
-        pathname: '/a/**' // Google user content often follows this pattern
+        pathname: '/a/**'
       }
     ]
+  },
+  experimental: {
+    serverActions: true
+  },
+  webpack(config) {
+    config.resolve.alias['@'] = path.resolve(__dirname, '.')
+    return config
   }
 }
 
