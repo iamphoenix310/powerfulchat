@@ -17,21 +17,23 @@ export async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname
   const firstSegment = pathname.split('/')[1]
 
-  // ✅ Redirect /subscription/:uuid/:uuid to /unsubscribe
+  // ✅ Handle unsubscribe redirects
   const unsubscribePattern = /^\/subscription\/[a-f0-9-]{36}\/[a-f0-9-]{36}$/i
   if (unsubscribePattern.test(pathname)) {
     const redirectUrl = new URL('/unsubscribe', req.url)
     return NextResponse.redirect(redirectUrl)
   }
 
+  // ✅ Auth token from NextAuth
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
   const isReserved = RESERVED_ROUTES.includes(firstSegment)
 
-  // ✅ Redirect to onboarding if logged in but no username
+  // ✅ Redirect to onboarding if logged in without username and accessing non-reserved route
   if (token && !token.username && !isReserved) {
     return NextResponse.redirect(new URL('/onboarding', req.url))
   }
 
+  // ✅ Construct headers for diagnostics
   const protocol = req.headers.get('x-forwarded-proto') || req.nextUrl.protocol
   const host =
     req.headers.get('x-forwarded-host') || req.headers.get('host') || ''
