@@ -1,6 +1,6 @@
 # Configuration Guide
 
-This guide covers the optional features and their configuration in Powerful AI.
+This guide covers the optional features and their configuration in Morphic.
 
 ## Table of Contents
 
