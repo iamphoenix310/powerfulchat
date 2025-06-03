@@ -43,14 +43,24 @@ export default function UserMenu() {
 
   if (!user) {
     return (
-      <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" asChild>
-          <a href="https://visitpowerful.com/auth?mode=login">Login</a>
-        </Button>
-        <Button size="sm" asChild>
-          <a href="https://visitpowerful.com/auth?mode=signup">Sign Up</a>
-        </Button>
-      </div>
+     <div className="flex items-center gap-2">
+  <Button
+    variant="outline"
+    size="sm"
+    className="px-2 py-1 text-xs h-7"
+    asChild
+  >
+    <a href="https://visitpowerful.com/auth?mode=login">Login</a>
+  </Button>
+  <Button
+    size="sm"
+    className="px-2 py-1 text-xs h-7"
+    asChild
+  >
+    <a href="https://visitpowerful.com/auth?mode=signup">Sign Up</a>
+  </Button>
+</div>
+
     )
   }
 

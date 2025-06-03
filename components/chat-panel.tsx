@@ -1,18 +1,20 @@
-'use client'
+"use client"
 
-import { Model } from '@/lib/types/models'
-import { cn } from '@/lib/utils'
-import { Message } from 'ai'
-import { ArrowUp, ChevronDown, MessageCirclePlus, Square } from 'lucide-react'
-import Image from 'next/image'
-import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
-import Textarea from 'react-textarea-autosize'
-import { useArtifact } from './artifact/artifact-context'
-import { EmptyScreen } from './empty-screen'
-import { ModelSelector } from './model-selector'
-import { SearchModeToggle } from './search-mode-toggle'
-import { Button } from './ui/button'
+import type React from "react"
+
+import type { Model } from "@/lib/types/models"
+import { cn } from "@/lib/utils"
+import type { Message } from "ai"
+import { ArrowUp, ChevronDown, MessageCirclePlus, Square } from "lucide-react"
+import Image from "next/image"
+import { useRouter } from "next/navigation"
+import { useEffect, useRef, useState } from "react"
+import Textarea from "react-textarea-autosize"
+import { useArtifact } from "./artifact/artifact-context"
+import { EmptyScreen } from "./empty-screen"
+import { ModelSelector } from "./model-selector"
+import { SearchModeToggle } from "./search-mode-toggle"
+import { Button } from "./ui/button"
 
 interface ChatPanelProps {
   input: string
@@ -43,11 +45,12 @@ export function ChatPanel({
   append,
   models,
   showScrollToBottomButton,
-  scrollContainerRef
+  scrollContainerRef,
 }: ChatPanelProps) {
   const [showEmptyScreen, setShowEmptyScreen] = useState(false)
   const router = useRouter()
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const formRef = useRef<HTMLFormElement>(null)
   const isFirstRender = useRef(true)
   const [isComposing, setIsComposing] = useState(false) // Composition state
   const [enterDisabled, setEnterDisabled] = useState(false) // Disable Enter after composition ends
@@ -66,30 +69,47 @@ export function ChatPanel({
   const handleNewChat = () => {
     setMessages([])
     closeArtifact()
-    router.push('/')
+    router.push("/")
   }
 
   const isToolInvocationInProgress = () => {
     if (!messages.length) return false
 
     const lastMessage = messages[messages.length - 1]
-    if (lastMessage.role !== 'assistant' || !lastMessage.parts) return false
+    if (lastMessage.role !== "assistant" || !lastMessage.parts) return false
 
     const parts = lastMessage.parts
     const lastPart = parts[parts.length - 1]
 
-    return (
-      lastPart?.type === 'tool-invocation' &&
-      lastPart?.toolInvocation?.state === 'call'
-    )
+    return lastPart?.type === "tool-invocation" && lastPart?.toolInvocation?.state === "call"
   }
+
+  // Handle suggestion click - set input and submit
+ const handleSuggestionClick = (message: string) => {
+  // Set the input value in state
+  handleInputChange({
+    target: { value: message },
+  } as React.ChangeEvent<HTMLTextAreaElement>)
+
+  // Use append directly to simulate user message submission
+  append({
+    role: 'user',
+    content: message,
+  })
+
+  // Optional: scroll to bottom
+  setTimeout(() => {
+    handleScrollToBottom()
+  }, 100)
+}
+
 
   // if query is not empty, submit the query
   useEffect(() => {
     if (isFirstRender.current && query && query.trim().length > 0) {
       append({
-        role: 'user',
-        content: query
+        role: "user",
+        content: query,
       })
       isFirstRender.current = false
     }
@@ -102,7 +122,7 @@ export function ChatPanel({
     if (scrollContainer) {
       scrollContainer.scrollTo({
         top: scrollContainer.scrollHeight,
-        behavior: 'smooth'
+        behavior: "smooth",
       })
     }
   }
@@ -110,28 +130,23 @@ export function ChatPanel({
   return (
     <div
       className={cn(
-        'w-full bg-background group/form-container shrink-0',
-        messages.length > 0 ? 'sticky bottom-0 px-2 pb-4' : 'px-6'
+        "w-full bg-background group/form-container shrink-0",
+        messages.length > 0 ? "sticky bottom-0 px-2 pb-4" : "px-6",
       )}
     >
       {messages.length === 0 && (
         <div className="mb-10 flex flex-col items-center gap-4">
-          <Image 
+          <Image
             src="/images/logo-main.png"
             alt="Powerful Chatbot"
             width={50}
             height={50}
             className="w-10 h-10 object-contain"
           />
-          <p className="text-center text-3xl font-semibold">
-            How can I help you today?
-          </p>
+          <p className="text-center text-2xl font-semibold">How can I help you today?</p>
         </div>
       )}
-      <form
-        onSubmit={handleSubmit}
-        className={cn('max-w-3xl w-full mx-auto relative')}
-      >
+      <form ref={formRef} onSubmit={handleSubmit} className={cn("max-w-3xl w-full mx-auto relative")}>
         {/* Scroll to bottom button - only shown when showScrollToBottomButton is true */}
         {showScrollToBottomButton && messages.length > 0 && (
           <Button
@@ -159,18 +174,13 @@ export function ChatPanel({
             spellCheck={false}
             value={input}
             disabled={isLoading || isToolInvocationInProgress()}
-            className="resize-none w-full min-h-12 bg-transparent border-0 p-4 text-sm placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-            onChange={e => {
+            className="resize-none w-full min-h-12 bg-transparent border-0 p-4 text-sm placeholder:text-muted-foreground focus:outline-none focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
+            onChange={(e) => {
               handleInputChange(e)
               setShowEmptyScreen(e.target.value.length === 0)
             }}
-            onKeyDown={e => {
-              if (
-                e.key === 'Enter' &&
-                !e.shiftKey &&
-                !isComposing &&
-                !enterDisabled
-              ) {
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey && !isComposing && !enterDisabled) {
                 if (input.trim().length === 0) {
                   e.preventDefault()
                   return
@@ -181,7 +191,6 @@ export function ChatPanel({
               }
             }}
             onFocus={() => setShowEmptyScreen(true)}
-            onBlur={() => setShowEmptyScreen(false)}
           />
 
           {/* Bottom menu area */}
@@ -204,14 +213,11 @@ export function ChatPanel({
                 </Button>
               )}
               <Button
-                type={isLoading ? 'button' : 'submit'}
-                size={'icon'}
-                variant={'outline'}
-                className={cn(isLoading && 'animate-pulse', 'rounded-full')}
-                disabled={
-                  (input.length === 0 && !isLoading) ||
-                  isToolInvocationInProgress()
-                }
+                type={isLoading ? "button" : "submit"}
+                size={"icon"}
+                variant={"outline"}
+                className={cn(isLoading && "animate-pulse", "rounded-full")}
+                disabled={(input.length === 0 && !isLoading) || isToolInvocationInProgress()}
                 onClick={isLoading ? stop : undefined}
               >
                 {isLoading ? <Square size={20} /> : <ArrowUp size={20} />}
@@ -220,16 +226,36 @@ export function ChatPanel({
           </div>
         </div>
 
-        {messages.length === 0 && (
-          <EmptyScreen
-            submitMessage={message => {
-              handleInputChange({
-                target: { value: message }
-              } as React.ChangeEvent<HTMLTextAreaElement>)
-            }}
-            className={cn(showEmptyScreen ? 'visible' : 'invisible')}
-          />
-        )}
+        <div className="relative">
+          {messages.length === 0 && (
+            <div className="absolute top-0 left-0 right-0 min-h-[120px] max-h-[200px] overflow-hidden">
+             <EmptyScreen
+                  submitMessage={(message) => {
+                    handleInputChange({
+                      target: { value: message }
+                    } as React.ChangeEvent<HTMLTextAreaElement>)
+
+                    // Wait for state to propagate before submitting
+                    setTimeout(() => {
+                      const textarea = inputRef.current
+                      if (textarea?.form) {
+                        textarea.form.requestSubmit()
+                      }
+                    }, 20)
+                  }}
+                  inputQuery={input}
+                 className={cn(
+                    input.trim().length > 0 ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none',
+                    'transition-opacity duration-200'
+                  )}
+
+                />
+
+            </div>
+          )}
+          {/* Spacer to maintain layout stability */}
+          {messages.length === 0 && <div className="h-[120px]" />}
+        </div>
       </form>
     </div>
   )

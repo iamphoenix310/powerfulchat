@@ -22,7 +22,7 @@ export default function AppSidebar() {
         <Link href="/" className="flex items-center gap-2 px-2 py-3">
          <Image 
               src="/images/logo-powerful.png"
-              alt="Powerful Chatbot"
+              alt="Powerful"
               width={130}
               height={30}
               className="w-130 h-30 object-contain"
