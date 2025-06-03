@@ -1,11 +1,6 @@
-import { LoginForm } from '@/components/login-form'
+// app/auth/login/page.tsx
+import { redirect } from 'next/navigation'
 
 export default function Page() {
-  return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm">
-        <LoginForm />
-      </div>
-    </div>
-  )
+  redirect('https://visitpowerful.com/auth?mode=login')
 }

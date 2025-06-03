@@ -2,19 +2,12 @@
 
 import { useSidebar } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
-import { User } from '@supabase/supabase-js'
-// import Link from 'next/link' // No longer needed directly here for Sign In button
 import React from 'react'
-// import { Button } from './ui/button' // No longer needed directly here for Sign In button
-import GuestMenu from './guest-menu' // Import the new GuestMenu component
 import UserMenu from './user-menu'
 
-interface HeaderProps {
-  user: User | null
-}
-
-export const Header: React.FC<HeaderProps> = ({ user }) => {
+export const Header: React.FC = () => {
   const { open } = useSidebar()
+
   return (
     <header
       className={cn(
@@ -23,11 +16,11 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
         'w-full'
       )}
     >
-      {/* This div can be used for a logo or title on the left if needed */}
-      <div></div>
+      {/* Placeholder for logo/title */}
+      <div />
 
       <div className="flex items-center gap-2">
-        {user ? <UserMenu user={user} /> : <GuestMenu />}
+        <UserMenu />
       </div>
     </header>
   )

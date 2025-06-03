@@ -11,8 +11,7 @@ import {
 import { IconLogo } from '@/components/ui/icons'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { createClient } from '@/lib/supabase/client'
-import { cn } from '@/lib/utils/index'
+import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -30,7 +29,6 @@ export function SignUpForm({
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
-    const supabase = createClient()
     setIsLoading(true)
     setError(null)
 
@@ -41,17 +39,21 @@ export function SignUpForm({
     }
 
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`
-        }
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
       })
-      if (error) throw error
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Registration failed')
+      }
+
       router.push('/auth/sign-up-success')
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : 'An error occurred')
+    } catch (err: any) {
+      setError(err.message || 'An unexpected error occurred')
     } finally {
       setIsLoading(false)
     }
@@ -87,9 +89,7 @@ export function SignUpForm({
                 />
               </div>
               <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                </div>
+                <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
                   type="password"
@@ -100,9 +100,7 @@ export function SignUpForm({
                 />
               </div>
               <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="repeat-password">Repeat Password</Label>
-                </div>
+                <Label htmlFor="repeat-password">Repeat Password</Label>
                 <Input
                   id="repeat-password"
                   type="password"

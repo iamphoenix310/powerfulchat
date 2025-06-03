@@ -1,21 +1,21 @@
-import { createClient } from '@/lib/supabase/client'
+'use client'
+
+import { useSession } from 'next-auth/react'
 import { useEffect, useState } from 'react'
 
 export const useCurrentUserName = () => {
+  const { data: session } = useSession()
   const [name, setName] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchProfileName = async () => {
-      const { data, error } = await createClient().auth.getSession()
-      if (error) {
-        console.error(error)
-      }
-
-      setName(data.session?.user.user_metadata.full_name ?? '?')
+    if (session?.user?.username) {
+      setName(session.user.username)
+    } else if (session?.user?.name) {
+      setName(session.user.name)
+    } else {
+      setName('?')
     }
-
-    fetchProfileName()
-  }, [])
+  }, [session])
 
   return name || '?'
 }
