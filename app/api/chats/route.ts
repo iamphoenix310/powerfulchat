@@ -1,7 +1,6 @@
-import { getChatsPage, saveChat } from '@/lib/actions/chat'
+import { getChatsPage } from '@/lib/actions/chat'
 import { getCurrentUserId } from '@/lib/auth/get-current-user'
 import { type Chat } from '@/lib/types'
-import { nanoid } from 'nanoid'
 import { NextRequest, NextResponse } from 'next/server'
 
 interface ChatPageResponse {
@@ -30,26 +29,5 @@ export async function GET(request: NextRequest) {
       { chats: [], nextOffset: null },
       { status: 500 }
     )
-  }
-}
-
-export async function POST(request: NextRequest) {
-  const userId = await getCurrentUserId()
-
-  const newChat: Chat = {
-    id: nanoid(),
-    title: '',
-    messages: [],
-    createdAt: new Date(),
-    userId: userId || 'anonymous',
-    path: `/chat/${nanoid()}` // ✅ add this line
-  }
-
-  try {
-    await saveChat(newChat, newChat.userId)
-    return NextResponse.json({ id: newChat.id }, { status: 201 })
-  } catch (error) {
-    console.error('Error saving new chat:', error)
-    return NextResponse.json({ error: 'Failed to save chat' }, { status: 500 })
   }
 }
