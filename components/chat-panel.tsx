@@ -12,7 +12,6 @@ import { useEffect, useRef, useState } from "react"
 import Textarea from "react-textarea-autosize"
 import { useArtifact } from "./artifact/artifact-context"
 import { EmptyScreen } from "./empty-screen"
-import { ModelSelector } from "./model-selector"
 import { SearchModeToggle } from "./search-mode-toggle"
 import { Button } from "./ui/button"
 
@@ -174,7 +173,12 @@ export function ChatPanel({
             spellCheck={false}
             value={input}
             disabled={isLoading || isToolInvocationInProgress()}
-            className="resize-none w-full min-h-12 bg-transparent border-0 p-4 text-sm placeholder:text-muted-foreground focus:outline-none focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
+            className="resize-none w-full min-h-12 rounded-3xl bg-muted/60 text-foreground 
+            placeholder:text-muted-foreground border border-transparent 
+            p-4 text-sm focus:outline-none focus:ring-0 focus:border-transparent 
+            focus-visible:outline-none focus-visible:ring-0"
+
+
             onChange={(e) => {
               handleInputChange(e)
               setShowEmptyScreen(e.target.value.length === 0)
@@ -196,7 +200,7 @@ export function ChatPanel({
           {/* Bottom menu area */}
           <div className="flex items-center justify-between p-3">
             <div className="flex items-center gap-2">
-              <ModelSelector models={models || []} />
+              {/* <ModelSelector models={models || []} /> */}
               <SearchModeToggle />
             </div>
             <div className="flex items-center gap-2">

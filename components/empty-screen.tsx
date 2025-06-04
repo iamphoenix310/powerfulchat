@@ -41,15 +41,16 @@ export function EmptyScreen({
         {!showLoading && displaySuggestions.length > 0 && (
           <div className="mt-2 flex flex-col items-start space-y-2 mb-4">
             {displaySuggestions.map((message: string, index: number) => (
-              <Button
+             <Button
                 key={`${inputQuery.length >= 2 ? "dynamic" : "default"}-${index}`}
                 variant="link"
-                className="h-auto p-0 text-base text-left justify-start hover:text-primary transition-colors duration-200"
+                className="h-auto p-0 text-left justify-start items-start whitespace-normal break-words text-sm sm:text-[0.95rem] leading-snug hover:text-primary transition-colors duration-200"
                 onClick={() => submitMessage(message)}
               >
-                <ArrowRight size={16} className="mr-2 text-muted-foreground flex-shrink-0" />
-                <span className="truncate">{message}</span>
+                <ArrowRight size={16} className="mr-2 mt-0.5 text-muted-foreground flex-shrink-0" />
+                <span className="text-left break-words line-clamp-3">{message}</span>
               </Button>
+
             ))}
           </div>
         )}
