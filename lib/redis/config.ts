@@ -145,6 +145,11 @@ class UpstashPipelineWrapper {
     return this
   }
 
+  zremrangebyrank(key: string, start: number, stop: number) {
+  this.pipeline.zremrangebyrank(key, start, stop)
+  return this
+}
+
   async exec() {
     try {
       return await this.pipeline.exec()
@@ -190,6 +195,12 @@ class LocalPipelineWrapper {
     this.pipeline.zAdd(key, { score, value: member })
     return this
   }
+  
+  zremrangebyrank(key: string, start: number, stop: number) {
+  this.pipeline.zRemRangeByRank(key, start, stop)
+  return this
+  }
+
 
   async exec() {
     try {

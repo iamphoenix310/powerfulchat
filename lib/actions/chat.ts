@@ -206,21 +206,24 @@ export async function saveChat(chat: Chat, userId: string = 'anonymous') {
     const redis = await getRedis()
     const pipeline = redis.pipeline()
 
+    const chatKey = `chat:${chat.id}`
+    const userKey = getUserChatKey(userId)
+
     const chatToSave = {
       ...chat,
-      messages: JSON.stringify(chat.messages)
+      messages: JSON.stringify(chat.messages),
     }
 
-    pipeline.hmset(`chat:${chat.id}`, chatToSave)
-    pipeline.zadd(getUserChatKey(userId), Date.now(), `chat:${chat.id}`)
+    pipeline.hmset(chatKey, chatToSave)
+    pipeline.zadd(userKey, Date.now(), chatKey)
 
     const results = await pipeline.exec()
-
     return results
   } catch (error) {
     throw error
   }
 }
+
 
 export async function getSharedChat(id: string) {
   const redis = await getRedis()
