@@ -169,7 +169,7 @@ export function ChatPanel({
             tabIndex={0}
             onCompositionStart={handleCompositionStart}
             onCompositionEnd={handleCompositionEnd}
-            placeholder="Ask a question..."
+            placeholder="Just ask anything..."
             spellCheck={false}
             value={input}
             disabled={isLoading || isToolInvocationInProgress()}
