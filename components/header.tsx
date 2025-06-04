@@ -3,7 +3,6 @@
 import { useSidebar } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 import Image from 'next/image'
-import Link from 'next/link'
 import React from 'react'
 import UserMenu from './user-menu'
 
@@ -25,16 +24,23 @@ export const Header: React.FC = () => {
 
   {/* Centered logo on mobile */}
   <div className="absolute left-1/2 -translate-x-1/2 block sm:hidden">
-    <Link href="/" className="flex items-center justify-center">
-      <Image
-        src="/images/logo-main.png"
-        alt="Powerful Chatbot"
-        width={25}
-        height={25}
-        className="w-7 h-7 object-contain"
-      />
-    </Link>
-  </div>
+  <button
+    onClick={() => {
+      window.dispatchEvent(new Event('start-new-chat'))
+    }}
+    className="flex items-center justify-center"
+    aria-label="Start new chat"
+  >
+    <Image
+      src="/images/logo-main.png"
+      alt="Powerful Chatbot"
+      width={25}
+      height={25}
+      className="w-7 h-7 object-contain"
+    />
+  </button>
+</div>
+
 
   {/* Right side - User Menu */}
   <div className="flex items-center gap-2">

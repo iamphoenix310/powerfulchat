@@ -126,6 +126,21 @@ export function ChatPanel({
     }
   }
 
+useEffect(() => {
+  const handleStartNewChat = () => {
+    setMessages([])
+    closeArtifact()
+    router.push('/')
+  }
+
+  window.addEventListener('start-new-chat', handleStartNewChat)
+
+  return () => {
+    window.removeEventListener('start-new-chat', handleStartNewChat)
+  }
+}, [setMessages, closeArtifact, router])
+
+
   return (
     <div
       className={cn(
