@@ -48,6 +48,7 @@
     "jsdom": "^22.1.0",
     "katex": "^0.16.10",
     "lucide-react": "^0.507.0",
+    "nanoid": "^5.1.5",
     "next": "^15.2.3",
     "next-auth": "^4.24.11",
     "next-auth-sanity": "^1.5.3",

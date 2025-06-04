@@ -57,6 +57,8 @@ export async function POST(req: Request) {
       )
     }
 
+    
+
     const supportsToolCalling = selectedModel.toolCallType === 'native'
 
     return supportsToolCalling

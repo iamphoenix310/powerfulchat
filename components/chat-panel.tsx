@@ -65,11 +65,15 @@ export function ChatPanel({
     }, 300)
   }
 
-  const handleNewChat = () => {
-    setMessages([])
-    closeArtifact()
-    router.push("/")
-  }
+  const handleNewChat = async () => {
+  const res = await fetch('/api/chats', { method: 'POST' })
+  const { id: newChatId } = await res.json()
+
+  setMessages([])
+  closeArtifact()
+  router.push(`/chat/${newChatId}`) // or just `/` if you don't route per chat
+}
+
 
   const isToolInvocationInProgress = () => {
     if (!messages.length) return false
