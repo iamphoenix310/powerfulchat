@@ -16,7 +16,7 @@ const fontSans = FontSans({
   variable: '--font-sans'
 })
 
-const title = 'Powerful AI Answer Engine'
+const title = 'Powerful - Intelligent Chat Assistant and Answer Engine'
 const description =
   'Powerful AI Answer Engine for Every seeker of knowledge. Ask anything, get instant answers, and explore a world of information with Powerful AI.'
 
