@@ -16,16 +16,23 @@ export function SearchResults({
   results,
   displayMode = 'grid'
 }: SearchResultsProps) {
-  // State to manage whether to display the results
+  // State to manage whether to display all results
   const [showAllResults, setShowAllResults] = useState(false)
 
   const handleViewMore = () => {
     setShowAllResults(true)
   }
 
-  // Logic for grid mode
+  // Generate citationMap based on unique URLs
+  const uniqueUrls = [...new Set(results.map(r => r.url))]
+  const citationMap = uniqueUrls.reduce<Record<string, number>>((acc, url, index) => {
+    acc[url] = index + 1
+    return acc
+  }, {})
+
   const displayedGridResults = showAllResults ? results : results.slice(0, 3)
   const additionalResultsCount = results.length > 3 ? results.length - 3 : 0
+
   const displayUrlName = (url: string) => {
     const hostname = new URL(url).hostname
     const parts = hostname.split('.')
@@ -48,9 +55,7 @@ export function SearchResults({
               <CardContent className="p-2 flex items-start space-x-2">
                 <Avatar className="h-4 w-4 mt-1 flex-shrink-0">
                   <AvatarImage
-                    src={`https://www.google.com/s2/favicons?domain=${
-                      new URL(result.url).hostname
-                    }`}
+                    src={`https://www.google.com/s2/favicons?domain=${new URL(result.url).hostname}`}
                     alt={new URL(result.url).hostname}
                   />
                   <AvatarFallback className="text-xs">
@@ -68,7 +73,7 @@ export function SearchResults({
                     <span className="underline">
                       {new URL(result.url).hostname}
                     </span>{' '}
-                    - {index + 1}
+                    - [{citationMap[result.url]}]
                   </div>
                 </div>
               </CardContent>
@@ -79,7 +84,7 @@ export function SearchResults({
     )
   }
 
-  // --- Grid Mode Rendering (Existing Logic) ---
+  // --- Grid Mode Rendering ---
   return (
     <div className="flex flex-wrap -m-1">
       {displayedGridResults.map((result, index) => (
@@ -93,9 +98,7 @@ export function SearchResults({
                 <div className="mt-2 flex items-center space-x-1">
                   <Avatar className="h-4 w-4">
                     <AvatarImage
-                      src={`https://www.google.com/s2/favicons?domain=${
-                        new URL(result.url).hostname
-                      }`}
+                      src={`https://www.google.com/s2/favicons?domain=${new URL(result.url).hostname}`}
                       alt={new URL(result.url).hostname}
                     />
                     <AvatarFallback>
@@ -103,7 +106,7 @@ export function SearchResults({
                     </AvatarFallback>
                   </Avatar>
                   <div className="text-xs opacity-60 truncate">
-                    {`${displayUrlName(result.url)} - ${index + 1}`}
+                    {`${displayUrlName(result.url)} - [${citationMap[result.url]}]`}
                   </div>
                 </div>
               </CardContent>
