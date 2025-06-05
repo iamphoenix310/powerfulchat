@@ -18,14 +18,16 @@ export const useAudioRecorder = ({
       streamRef.current = stream;
       chunks.current = [];
 
-      // Determine the best supported MIME type for recording
-      let mimeType = "audio/webm"; // Default for broader support
-      if (MediaRecorder.isTypeSupported("audio/mp4")) {
-        mimeType = "audio/mp4"; // Often uses AAC, good for iOS
-      } else if (MediaRecorder.isTypeSupported("audio/wav")) {
-        mimeType = "audio/wav"; // Uncompressed, but highly compatible
+      let mimeType = "audio/webm"; // Default for broader support (less likely to be optimal for iOS)
+
+      // Prioritize highly compatible formats for iOS/mobile
+      if (MediaRecorder.isTypeSupported("audio/wav")) {
+        mimeType = "audio/wav"; // Good for AAC (iOS often prefers this)
+      } else if (MediaRecorder.isTypeSupported("audio/mp4")) {
+        mimeType = "audio/mp4"; // Uncompressed, most compatible, but large files
+      } else if (MediaRecorder.isTypeSupported("audio/ogg; codecs=opus")) {
+        mimeType = "audio/ogg; codecs=opus"; // Good quality, smaller than wav, may or may not work well on iOS Chrome
       }
-      // You can add more checks if needed, like 'audio/ogg' etc.
 
       console.log("Using MIME type for MediaRecorder:", mimeType);
 
@@ -45,18 +47,16 @@ export const useAudioRecorder = ({
         // Stop all tracks
         streamRef.current?.getTracks().forEach((track) => track.stop());
 
-        // Use the determined mimeType for the Blob
         const audioBlob = new Blob(chunks.current, { type: mimeType });
 
-        if (audioBlob.size < 100) {
-          console.warn("Recording too short or empty");
+        if (audioBlob.size < 100) { // Increased threshold to 100 bytes for minimal content
+          console.warn("Recording too short or empty. Blob size:", audioBlob.size);
           return;
         }
 
         const formData = new FormData();
-        // Ensure the filename extension matches the MIME type
-        const filename = `audio.${mimeType.split('/')[1].split(';')[0]}`; // e.g., audio.mp4 or audio.webm
-        formData.append("file", audioBlob, filename);
+        const fileExtension = mimeType.split('/')[1].split(';')[0]; // e.g., 'webm', 'mp4', 'wav'
+        formData.append("file", audioBlob, `audio.${fileExtension}`);
 
         try {
           const res = await fetch("/api/audio/transcribe", {
@@ -69,14 +69,14 @@ export const useAudioRecorder = ({
             console.log("JSON from API:", json);
             onTranscribe(json.text.trim());
           } else {
-            console.warn("No transcription result:", json);
+            console.warn("No transcription result or empty text:", json);
           }
         } catch (error) {
           console.error("Transcription error:", error);
         }
       };
 
-      recorder.start();
+      recorder.start(1000);
       intervalRef.current = setInterval(() => {
         setWaveProgress((p) => (p + 5) % 100);
       }, 150);
