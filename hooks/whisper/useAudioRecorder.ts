@@ -21,15 +21,21 @@ export const useAudioRecorder = ({
       let mimeType = "audio/webm"; // Default for broader support (less likely to be optimal for iOS)
 
       // Prioritize highly compatible formats for iOS/mobile
-      if (MediaRecorder.isTypeSupported("audio/wav")) {
-        mimeType = "audio/wav"; // Good for AAC (iOS often prefers this)
-      } else if (MediaRecorder.isTypeSupported("audio/mp4")) {
-        mimeType = "audio/mp4"; // Uncompressed, most compatible, but large files
-      } else if (MediaRecorder.isTypeSupported("audio/ogg; codecs=opus")) {
-        mimeType = "audio/ogg; codecs=opus"; // Good quality, smaller than wav, may or may not work well on iOS Chrome
-      }
+      // Prioritize highly compatible formats for iOS/mobile
+      const isIOS =
+        typeof navigator !== 'undefined' &&
+        /iPad|iPhone|iPod/.test(navigator.userAgent) &&
+        !('MSStream' in window);
 
-      console.log("Using MIME type for MediaRecorder:", mimeType);
+      if (isIOS && MediaRecorder.isTypeSupported("audio/wav")) {
+        mimeType = "audio/wav"; // Force WAV for iOS for better accuracy
+      } else if (MediaRecorder.isTypeSupported("audio/mp4")) {
+        mimeType = "audio/mp4"; // Good fallback, works well on Android/desktop
+      } else if (MediaRecorder.isTypeSupported("audio/ogg; codecs=opus")) {
+        mimeType = "audio/ogg; codecs=opus"; // Modern, efficient format
+      } else {
+        mimeType = "audio/webm"; // Default fallback
+      }
 
       const recorder = new MediaRecorder(stream, { mimeType });
       mediaRecorderRef.current = recorder;
