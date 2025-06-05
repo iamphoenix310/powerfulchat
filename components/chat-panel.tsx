@@ -2,10 +2,11 @@
 
 import type React from "react"
 
+import { useAudioRecorder } from "@/hooks/whisper/useAudioRecorder"
 import type { Model } from "@/lib/types/models"
 import { cn } from "@/lib/utils"
 import type { Message } from "ai"
-import { ArrowUp, ChevronDown, MessageCirclePlus, Square } from "lucide-react"
+import { ArrowUp, ChevronDown, MessageCirclePlus, Mic, MicOff, Square } from 'lucide-react'
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
@@ -54,6 +55,19 @@ export function ChatPanel({
   const [isComposing, setIsComposing] = useState(false) // Composition state
   const [enterDisabled, setEnterDisabled] = useState(false) // Disable Enter after composition ends
   const { close: closeArtifact } = useArtifact()
+  const { recording, waveProgress, startRecording, stopRecording } = useAudioRecorder({
+  onTranscribe: (text: string) => {
+    // Instead of append, just set input value!
+    handleInputChange({
+      target: { value: text },
+    } as React.ChangeEvent<HTMLTextAreaElement>);
+
+    // Optionally, focus the textarea
+    inputRef.current?.focus();
+    handleScrollToBottom();
+  }
+});
+
 
   const handleCompositionStart = () => setIsComposing(true)
 
@@ -231,6 +245,25 @@ useEffect(() => {
                   <MessageCirclePlus className="size-4 group-hover:rotate-12 transition-all" />
                 </Button>
               )}
+              <Button
+                  variant="outline"
+                  size="icon"
+                  type="button"
+                  onClick={recording ? stopRecording : startRecording}
+                  className={cn("rounded-full", recording && "bg-red-100")}
+                  disabled={isLoading || isToolInvocationInProgress()}
+                >
+                  {recording ? <MicOff className="text-red-500" size={18} /> : <Mic size={18} />}
+                </Button>
+                {recording && (
+                  <div className="h-3 w-24 rounded-full bg-muted relative overflow-hidden">
+                    <div
+                      className="absolute left-0 top-0 h-full bg-primary transition-all duration-150"
+                      style={{ width: `${waveProgress}%` }}
+                    />
+                  </div>
+                )}
+
               <Button
                 type={isLoading ? "button" : "submit"}
                 size={"icon"}
