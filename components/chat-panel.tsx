@@ -13,8 +13,10 @@ import { useEffect, useRef, useState } from "react"
 import Textarea from "react-textarea-autosize"
 import { useArtifact } from "./artifact/artifact-context"
 import { EmptyScreen } from "./empty-screen"
+import { ModelSelector } from "./model-selector"
 import { SearchModeToggle } from "./search-mode-toggle"
 import { Button } from "./ui/button"
+
 
 interface ChatPanelProps {
   input: string
@@ -31,6 +33,8 @@ interface ChatPanelProps {
   showScrollToBottomButton: boolean
   /** Reference to the scroll container */
   scrollContainerRef: React.RefObject<HTMLDivElement>
+  images: File[]
+  setImages: (files: File[]) => void
 }
 
 export function ChatPanel({
@@ -67,6 +71,8 @@ export function ChatPanel({
     handleScrollToBottom();
   }
 });
+const [images, setImages] = useState<File[]>([])
+
 
 
   const handleCompositionStart = () => setIsComposing(true)
@@ -188,7 +194,6 @@ useEffect(() => {
             <ChevronDown size={16} />
           </Button>
         )}
-
         <div className="relative flex flex-col w-full gap-2 bg-muted rounded-3xl border border-input">
           <Textarea
             ref={inputRef}
@@ -229,7 +234,7 @@ useEffect(() => {
           {/* Bottom menu area */}
           <div className="flex items-center justify-between p-3">
             <div className="flex items-center gap-2">
-              {/* <ModelSelector models={models || []} /> */}
+              <ModelSelector models={models || []} />
               <SearchModeToggle />
             </div>
             <div className="flex items-center gap-2">

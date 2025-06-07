@@ -16,6 +16,7 @@ interface ChatSection {
   id: string // User message ID
   userMessage: Message
   assistantMessages: Message[]
+  
 }
 
 export function Chat({
@@ -31,7 +32,7 @@ export function Chat({
 }) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [isAtBottom, setIsAtBottom] = useState(true)
-
+  const [images, setImages] = useState<File[]>([])
   const {
     messages,
     input,
@@ -228,6 +229,8 @@ export function Chat({
         stop={stop}
         query={query}
         append={append}
+        images={images}
+        setImages={setImages}
         models={models}
         showScrollToBottomButton={!isAtBottom}
         scrollContainerRef={scrollContainerRef}

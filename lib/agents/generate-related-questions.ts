@@ -1,5 +1,5 @@
 import { relatedSchema } from '@/lib/schema/related'
-import { CoreMessage, generateObject } from 'ai'
+import { CoreMessage, generateObject, generateText } from 'ai'
 import {
   getModel,
   getToolCallModel,
@@ -10,27 +10,55 @@ export async function generateRelatedQuestions(
   messages: CoreMessage[],
   model: string
 ) {
-  const lastMessages = messages.slice(-1).map(message => ({
-    ...message,
+  const lastUserMessages = messages.slice(-1).map(m => ({
+    ...m,
     role: 'user'
   })) as CoreMessage[]
 
-  const supportedModel = isToolCallSupported(model)
-  const currentModel = supportedModel
-    ? getModel(model)
-    : getToolCallModel(model)
+  const systemPrompt = `As a professional web researcher, your task is to generate a set of three queries that explore the subject matter more deeply, building upon the initial query and the information uncovered in its search results.
 
-  const result = await generateObject({
+If the original question was "What caused the decline of the Harappan Civilization?", your output should look like:
+
+Related:
+- What were the environmental factors that contributed to the Harappan decline?
+- How did trade routes affect the sustainability of Harappan cities?
+- What archaeological evidence exists for natural disasters during that period?
+
+Match the user's language. Keep each question concise and helpful.`
+
+  const supportsToolCall = isToolCallSupported(model)
+  const currentModel = supportsToolCall ? getModel(model) : getToolCallModel(model)
+
+  try {
+    if (supportsToolCall) {
+      // ✅ Try tool-call-based generation first
+      return await generateObject({
+        model: currentModel,
+        system: systemPrompt,
+        messages: lastUserMessages,
+        schema: relatedSchema
+      })
+    }
+  } catch (err) {
+    console.warn(`Tool call failed for ${model}, falling back to prompt-based generation.`)
+  }
+
+  // ✅ Always fallback to prompt-based generation for unsupported models
+  const result = await generateText({
     model: currentModel,
-    system: `As a professional web researcher, your task is to generate a set of three queries that explore the subject matter more deeply, building upon the initial query and the information uncovered in its search results.
-
-    For instance, if the original query was "Starship's third test flight key milestones", your output should follow this format:
-
-    Aim to create queries that progressively delve into more specific aspects, implications, or adjacent topics related to the initial query. The goal is to anticipate the user's potential information needs and guide them towards a more comprehensive understanding of the subject matter.
-    Please match the language of the response to the user's language.`,
-    messages: lastMessages,
-    schema: relatedSchema
+    system: systemPrompt,
+    messages: lastUserMessages
   })
 
-  return result
+  const text = result.text || ''
+  const lines = text
+    .split('\n')
+    .filter(line => line.trim().startsWith('-'))
+    .map(line => line.replace(/^- /, '').trim())
+    .filter(Boolean)
+
+  return {
+    object: 'related',
+    data: lines.slice(0, 3) // Always return max 3
+  }
 }
