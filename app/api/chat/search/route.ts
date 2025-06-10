@@ -1,3 +1,8 @@
+// app/api/chat/search/route.ts
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
 import { getCurrentUserId } from '@/lib/auth/get-current-user'
 import { getRedisClient } from '@/lib/redis/config'
 import { type Chat } from '@/lib/types'

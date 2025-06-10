@@ -1,3 +1,4 @@
+// app/api/chat/[id]/route.ts
 import { deleteChat } from '@/lib/actions/chat'
 import { getCurrentUserId } from '@/lib/auth/get-current-user'
 import { NextRequest, NextResponse } from 'next/server'
