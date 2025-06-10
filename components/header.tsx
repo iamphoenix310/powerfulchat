@@ -4,7 +4,6 @@ import { useSidebar } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 import { User } from '@supabase/supabase-js'
 import Image from 'next/image'
-import Link from 'next/link'
 import React from 'react'
 import GuestMenu from './guest-menu'
 import UserMenu from './user-menu'
@@ -28,7 +27,7 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
     >
       {/* Left spacer or logo */}
       <div className="flex items-center">
-        <Link href="/" aria-label="Home">
+        {/* <Link href="/" aria-label="Home">
           <Image
             src="/images/logo-main.png"
             alt="Powerful Chatbot"
@@ -36,7 +35,7 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
             height={30}
             className="w-8 h-8 object-contain"
           />
-        </Link>
+        </Link> */}
       </div>
 
       {/* Mobile center button */}
