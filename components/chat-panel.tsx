@@ -122,18 +122,18 @@ const [images, setImages] = useState<File[]>([])
   }, 100)
 }
 
+const hasAppendedInitialQuery = useRef(false)
 
   // if query is not empty, submit the query
   useEffect(() => {
-    if (isFirstRender.current && query && query.trim().length > 0) {
-      append({
-        role: "user",
-        content: query,
-      })
-      isFirstRender.current = false
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query])
+  if (!hasAppendedInitialQuery.current && query?.trim()) {
+    append({
+      role: "user",
+      content: query,
+    })
+    hasAppendedInitialQuery.current = true
+  }
+}, [query])
 
   // Scroll to the bottom of the container
   const handleScrollToBottom = () => {
