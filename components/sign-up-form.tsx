@@ -8,11 +8,11 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card'
-import { IconLogo } from '@/components/ui/icons'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils/index'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -65,7 +65,13 @@ export function SignUpForm({
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl flex flex-col items-center justify-center gap-4">
-            <IconLogo className="size-12" />
+            <Image
+              src="/images/logo-main.png"
+              alt="Start new chat"
+              width={40}
+              height={40}
+              className="w-9 h-9 object-contain"
+            />
             Create an account
           </CardTitle>
           <CardDescription>
