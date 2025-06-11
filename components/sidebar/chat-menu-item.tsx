@@ -181,16 +181,6 @@ export function ChatMenuItem({ chat }: ChatMenuItemProps) {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-          <DropdownMenuItem asChild>
-        <Link
-          href="https://visitpowerful.com/n/privacy"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs text-muted-foreground hover:text-primary transition-colors"
-        >
-            Privacy Policy
-        </Link>
-          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </SidebarMenuItem>

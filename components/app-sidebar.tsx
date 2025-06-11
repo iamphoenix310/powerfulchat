@@ -40,6 +40,19 @@ export default function AppSidebar() {
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
+           {/* Privacy Policy link */}
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link
+                href="https://visitpowerful.com/n/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-muted-foreground hover:text-primary"
+              >
+                Privacy Policy
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         </SidebarMenu>
         <div className="flex-1 overflow-y-auto">
           <Suspense fallback={<ChatHistorySkeleton />}>
