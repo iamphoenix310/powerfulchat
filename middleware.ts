@@ -1,36 +1,46 @@
-import { updateSession } from '@/lib/supabase/middleware'
-import { type NextRequest, NextResponse } from 'next/server'
+import { getToken } from 'next-auth/jwt'
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 
-export async function middleware(request: NextRequest) {
-  // Get the protocol from X-Forwarded-Proto header or request protocol
-  const protocol =
-    request.headers.get('x-forwarded-proto') || request.nextUrl.protocol
+const RESERVED_ROUTES = [
+  'auth',
+  'dashboard',
+  'home',
+  'onboarding',
+  'api',
+  '_next',
+  'static',
+  'favicon.ico'
+]
 
-  // Get the host from X-Forwarded-Host header or request host
-  const host =
-    request.headers.get('x-forwarded-host') || request.headers.get('host') || ''
+export async function middleware(req: NextRequest) {
+  const pathname = req.nextUrl.pathname
+  const firstSegment = pathname.split('/')[1]
 
-  // Construct the base URL - ensure protocol has :// format
-  const baseUrl = `${protocol}${protocol.endsWith(':') ? '//' : '://'}${host}`
-
-  // Create a response
-  let response: NextResponse
-
-  // Handle Supabase session if configured
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-  if (supabaseUrl && supabaseAnonKey) {
-    response = await updateSession(request)
-  } else {
-    // If Supabase is not configured, just pass the request through
-    response = NextResponse.next({
-      request
-    })
+  // ✅ Handle unsubscribe redirects
+  const unsubscribePattern = /^\/subscription\/[a-f0-9-]{36}\/[a-f0-9-]{36}$/i
+  if (unsubscribePattern.test(pathname)) {
+    const redirectUrl = new URL('/unsubscribe', req.url)
+    return NextResponse.redirect(redirectUrl)
   }
 
-  // Add request information to response headers
-  response.headers.set('x-url', request.url)
+  // ✅ Auth token from NextAuth
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
+  const isReserved = RESERVED_ROUTES.includes(firstSegment)
+
+  // ✅ Redirect to onboarding if logged in without username and accessing non-reserved route
+  if (token && !token.username && !isReserved) {
+    return NextResponse.redirect(new URL('/onboarding', req.url))
+  }
+
+  // ✅ Construct headers for diagnostics
+  const protocol = req.headers.get('x-forwarded-proto') || req.nextUrl.protocol
+  const host =
+    req.headers.get('x-forwarded-host') || req.headers.get('host') || ''
+  const baseUrl = `${protocol}${protocol.endsWith(':') ? '//' : '://'}${host}`
+
+  const response = NextResponse.next()
+  response.headers.set('x-url', req.url)
   response.headers.set('x-host', host)
   response.headers.set('x-protocol', protocol)
   response.headers.set('x-base-url', baseUrl)
@@ -40,13 +50,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'
+    '/subscription/:path*',
+    '/((?!api|auth|_next|static|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'
   ]
 }

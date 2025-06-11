@@ -5,14 +5,12 @@ import { cn } from '@/lib/utils'
 import { User } from '@supabase/supabase-js'
 import Image from 'next/image'
 import React from 'react'
-import GuestMenu from './guest-menu'
 import UserMenu from './user-menu'
 
 interface HeaderProps {
   user: User | null
 }
-
-export const Header: React.FC<HeaderProps> = ({ user }) => {
+export const Header: React.FC = () => {
   const { open } = useSidebar()
 
   return (
@@ -27,15 +25,7 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
     >
       {/* Left spacer or logo */}
       <div className="flex items-center">
-        {/* <Link href="/" aria-label="Home">
-          <Image
-            src="/images/logo-main.png"
-            alt="Powerful Chatbot"
-            width={30}
-            height={30}
-            className="w-8 h-8 object-contain"
-          />
-        </Link> */}
+       
       </div>
 
       {/* Mobile center button */}
@@ -59,7 +49,7 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
 
       {/* Right side */}
       <div className="flex items-center gap-2">
-        {user ? <UserMenu user={user} /> : <GuestMenu />}
+         <UserMenu />
       </div>
     </header>
   )
