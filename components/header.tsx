@@ -3,9 +3,7 @@
 import { useSidebar } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 import { User } from '@supabase/supabase-js'
-import Image from 'next/image'
 import React from 'react'
-import UserMenu from './user-menu'
 
 interface HeaderProps {
   user: User | null
@@ -25,32 +23,9 @@ export const Header: React.FC = () => {
     >
       {/* Left spacer or logo */}
       <div className="flex items-center">
-       
       </div>
-
       {/* Mobile center button */}
-      <div className="absolute left-1/2 -translate-x-1/2 block sm:hidden">
-        <button
-          onClick={() => {
-            window.dispatchEvent(new Event('start-new-chat'))
-          }}
-          className="flex items-center justify-center"
-          aria-label="Start new chat"
-        >
-          <Image
-            src="/images/logo-main.png"
-            alt="Start new chat"
-            width={25}
-            height={25}
-            className="w-7 h-7 object-contain"
-          />
-        </button>
-      </div>
-
-      {/* Right side */}
-      <div className="flex items-center gap-2">
-         <UserMenu />
-      </div>
+      
     </header>
   )
 }

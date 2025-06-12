@@ -16,6 +16,7 @@ import { EmptyScreen } from "./empty-screen"
 import { ModelSelector } from "./model-selector"
 import { SearchModeToggle } from "./search-mode-toggle"
 import { Button } from "./ui/button"
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 
 
 interface ChatPanelProps {
@@ -234,52 +235,103 @@ useEffect(() => {
           {/* Bottom menu area */}
           <div className="flex items-center justify-between p-3">
             <div className="flex items-center gap-2">
-              <ModelSelector models={models || []} />
-              <SearchModeToggle />
+                <ModelSelector models={models || []} />
+                <SearchModeToggle />
             </div>
+            
             <div className="flex items-center gap-2">
-              {messages.length > 0 && (
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleNewChat}
-                  className="shrink-0 rounded-full group"
-                  type="button"
-                  disabled={isLoading || isToolInvocationInProgress()}
-                >
-                  <MessageCirclePlus className="size-4 group-hover:rotate-12 transition-all" />
-                </Button>
-              )}
-              <Button
-                  variant="outline"
-                  size="icon"
-                  type="button"
-                  onClick={recording ? stopRecording : startRecording}
-                  className={cn("rounded-full", recording && "bg-red-100")}
-                  disabled={isLoading || isToolInvocationInProgress()}
-                >
-                  {recording ? <MicOff className="text-red-500" size={18} /> : <Mic size={18} />}
-                </Button>
-                {recording && (
-                  <div className="h-3 w-24 rounded-full bg-muted relative overflow-hidden">
-                    <div
-                      className="absolute left-0 top-0 h-full bg-primary transition-all duration-150"
-                      style={{ width: `${waveProgress}%` }}
-                    />
-                  </div>
-                )}
+                {/* 👇 Collapsed buttons for small screens only */}
+                <div className="flex md:hidden items-center gap-2">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="icon" className="rounded-full">
+                        <ChevronDown size={16} />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-40 p-2">
+                      <div className="flex flex-col space-y-2">
+                        {messages.length > 0 && (
+                          <Button
+                            variant="ghost"
+                            onClick={handleNewChat}
+                            className="justify-start w-full"
+                          >
+                            <MessageCirclePlus className="mr-2" size={16} />
+                            New Chat
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          onClick={recording ? stopRecording : startRecording}
+                          className="justify-start w-full"
+                        >
+                          {recording ? (
+                            <>
+                              <MicOff className="mr-2 text-red-500" size={16} />
+                              Stop Recording
+                            </>
+                          ) : (
+                            <>
+                              <Mic className="mr-2" size={16} />
+                              Start Recording
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
 
-              <Button
-                type={isLoading ? "button" : "submit"}
-                size={"icon"}
-                variant={"outline"}
-                className={cn(isLoading && "animate-pulse", "rounded-full")}
-                disabled={(input.length === 0 && !isLoading) || isToolInvocationInProgress()}
-                onClick={isLoading ? stop : undefined}
-              >
-                {isLoading ? <Square size={20} /> : <ArrowUp size={20} />}
-              </Button>
-            </div>
+                {/* 👇 Full set of buttons for medium+ screens only */}
+                <div className="hidden md:flex items-center gap-2">
+                  {messages.length > 0 && (
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={handleNewChat}
+                      className="shrink-0 rounded-full group"
+                      type="button"
+                      disabled={isLoading || isToolInvocationInProgress()}
+                    >
+                      <MessageCirclePlus className="size-4 group-hover:rotate-12 transition-all" />
+                    </Button>
+                  )}
+
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    type="button"
+                    onClick={recording ? stopRecording : startRecording}
+                    className={cn("rounded-full", recording && "bg-red-100")}
+                    disabled={isLoading || isToolInvocationInProgress()}
+                  >
+                    {recording ? <MicOff className="text-red-500" size={18} /> : <Mic size={18} />}
+                  </Button>
+
+                  {recording && (
+                    <div className="h-3 w-24 rounded-full bg-muted relative overflow-hidden">
+                      <div
+                        className="absolute left-0 top-0 h-full bg-primary transition-all duration-150"
+                        style={{ width: `${waveProgress}%` }}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* ✅ Always show this: Submit button */}
+                <Button
+                  type={isLoading ? "button" : "submit"}
+                  size="icon"
+                  variant="outline"
+                  className={cn(isLoading && "animate-pulse", "rounded-full")}
+                  disabled={(input.length === 0 && !isLoading) || isToolInvocationInProgress()}
+                  onClick={isLoading ? stop : undefined}
+                >
+                  {isLoading ? <Square size={20} /> : <ArrowUp size={20} />}
+                </Button>
+              </div>
+
+
           </div>
         </div>
 

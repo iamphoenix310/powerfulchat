@@ -1,0 +1,13 @@
+
+.font-logo a{
+    text-decoration: none;
+  }
+
+  .links-menu a{
+    text-decoration: none !important;
+    margin-left: 2rem;
+  }
+
+  .margin-navbar {
+    margin-top: 0.5rem;
+  }

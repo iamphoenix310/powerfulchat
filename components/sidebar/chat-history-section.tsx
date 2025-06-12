@@ -1,10 +1,9 @@
+// ✅ components/sidebar/chat-history-section.tsx
 import { ChatHistoryClient } from './chat-history-client'
 
-export async function ChatHistorySection() {
-  const enableSaveChatHistory = process.env.ENABLE_SAVE_CHAT_HISTORY === 'true'
-  if (!enableSaveChatHistory) {
-    return null
-  }
+export default function ChatHistorySection() {
+  const enabled = process.env.NEXT_PUBLIC_ENABLE_SAVE_CHAT_HISTORY === 'true'
 
+  if (!enabled) return null
   return <ChatHistoryClient />
 }

@@ -16,6 +16,7 @@ import { Link2, LogOut, Palette } from 'lucide-react'
 import { signOut, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { ExternalLinkItems } from './external-link-items'
+import SignIn from './GoogleLogin/singIn'
 import { ThemeMenuItems } from './theme-menu-items'
 import { Button } from './ui/button'
 
@@ -43,14 +44,7 @@ export default function UserMenu() {
 
   if (!user) {
     return (
-      <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" asChild>
-          <a href="https://visitpowerful.com/auth?mode=login">Login</a>
-        </Button>
-        <Button size="sm" asChild>
-          <a href="https://visitpowerful.com/auth?mode=signup">Sign Up</a>
-        </Button>
-      </div>
+      <SignIn />
     )
   }
 

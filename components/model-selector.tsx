@@ -107,7 +107,13 @@ export function ModelSelector({ models }: { models: Model[] }) {
                 height={18}
                 className="bg-white rounded-full border"
               />
-              <span className="text-xs font-medium">{selectedModel.name}</span>
+              <span
+                className="text-xs font-medium truncate max-w-[100px]"
+                title={selectedModel.name}
+              >
+                {selectedModel.name}
+              </span>
+
               {isReasoningModel(selectedModel.id) && (
                 <Lightbulb size={12} className="text-accent-blue-foreground" />
               )}
@@ -140,16 +146,16 @@ export function ModelSelector({ models }: { models: Model[] }) {
                               onSelect={handleModelSelect}
                               className="flex justify-between items-center"
                             >
-                              <div className="flex items-center space-x-2">
-                                <Image
-                                  src={`/providers/logos/${model.providerId}.svg`}
-                                  alt={model.provider}
-                                  width={18}
-                                  height={18}
-                                  className="bg-white rounded-full border"
-                                />
-                                <span className="text-xs font-medium">{model.name}</span>
-                              </div>
+                              <div className="flex items-center space-x-2 overflow-hidden">
+                                  <Image
+                                    src={`/providers/logos/${model.providerId}.svg`}
+                                    alt={model.provider}
+                                    width={18}
+                                    height={18}
+                                    className="bg-white rounded-full border shrink-0"
+                                  />
+                                  <span className="text-xs font-medium max-w-[120px]">{model.name}</span>
+                                </div>
                               <Check
                                 className={`h-4 w-4 ${
                                   value === modelId ? 'opacity-100' : 'opacity-0'

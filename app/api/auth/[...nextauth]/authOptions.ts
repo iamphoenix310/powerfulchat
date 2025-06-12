@@ -58,19 +58,6 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
   },
 
-  cookies: {
-  sessionToken: {
-    name: `__Secure-next-auth.session-token`,
-    options: {
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/",
-      secure: true,
-      domain: ".visitpowerful.com", // 👈 ensures shared cookie across subdomains
-    },
-  },
-},
-
 
   callbacks: {
     async signIn({ user }) {
