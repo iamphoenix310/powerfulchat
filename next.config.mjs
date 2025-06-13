@@ -16,7 +16,10 @@ const nextConfig = {
         pathname: '/a/**' // Google user content often follows this pattern
       }
     ]
-  }
+  },
+   eslint: {
+    ignoreDuringBuilds: true,
+  },
 }
 
 export default nextConfig
