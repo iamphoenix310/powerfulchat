@@ -8,17 +8,14 @@ import { notFound } from "next/navigation"
 export const dynamic = "force-dynamic"
 
 type Props = {
-  params: {
-    username: string
-    postId: string
-  }
+  params: Promise<{ username: string; postId: string }>
 }
 
 export async function generateMetadata(
   { params }: Props,
   _parent?: ResolvingMetadata
 ): Promise<Metadata> {
-  const { username, postId } = params
+  const { username, postId } = await params
 
   const query = `*[_type == "userFeed" && _id == $postId && author->username == $username][0]{
     text,
@@ -71,7 +68,7 @@ export async function generateMetadata(
 }
 
 export default async function FeedPostPage({ params }: Props) {
-  const { username, postId } = params
+  const { username, postId } = await params
   const session = await getServerSession(authOptions)
 
   const query = `*[_type == "userFeed" && _id == $postId && author->username == $username][0]{
