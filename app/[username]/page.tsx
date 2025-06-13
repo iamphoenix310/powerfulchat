@@ -1,12 +1,14 @@
 import { client, urlFor } from "@/app/utils/sanityClient";
+import UserProfileClient from "@/components/User/MainPage";
 import { Metadata } from "next";
-import UserProfileClient from "@/components/User/MainPage"; // must be default export of the Client Component
 
 type Props = {
-  params: { username: string };
+  params: Promise<{ username: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { username } = await params;
+
   try {
     const user = await client.fetch(
       `*[_type == "user" && username == $username][0]{
@@ -14,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         bio,
         profileImage
       }`,
-      { username: params.username }
+      { username }
     );
 
     if (!user) {
@@ -38,7 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         title,
         description,
         type: "profile",
-        url: `https://visitpowerful.com/users/${params.username}`,
+        url: `https://visitpowerful.com/users/${username}`,
         images: [
           {
             url: ogImage,
@@ -64,6 +66,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function UserProfile({ params }: Props) {
+  const { username } = await params;
+
   const user = await client.fetch(
     `*[_type == "user" && username == $username][0]{
       _id,
@@ -76,7 +80,7 @@ export default async function UserProfile({ params }: Props) {
       "following": following[]->_id,
       socialLinks
     }`,
-    { username: params.username }
+    { username }
   );
 
   if (!user) {
@@ -101,10 +105,7 @@ export default async function UserProfile({ params }: Props) {
 
   return (
     <div className="flex flex-col items-center justify-center">
-      <UserProfileClient
-        userData={user}
-        initialImages={initialImages}
-      />
+      <UserProfileClient userData={user} initialImages={initialImages} />
     </div>
   );
 }
