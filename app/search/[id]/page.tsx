@@ -1,9 +1,11 @@
 import { Chat } from '@/components/chat'
+import { DefaultSkeleton } from '@/components/default-skeleton'
 import { getChat } from '@/lib/actions/chat'
 import { getCurrentUserId } from '@/lib/auth/get-current-user'
 import { getModels } from '@/lib/config/models'
 import { convertToUIMessages } from '@/lib/utils'
 import { notFound, redirect } from 'next/navigation'
+import { Suspense } from 'react'
 
 export const maxDuration = 60
 
@@ -18,6 +20,7 @@ export async function generateMetadata(props: {
   }
 }
 
+// Wrap Chat component in Suspense with a fallback
 export default async function SearchPage(props: {
   params: Promise<{ id: string }>
 }) {
@@ -25,17 +28,15 @@ export default async function SearchPage(props: {
   const { id } = await props.params
 
   const chat = await getChat(id, userId)
-  // convertToUIMessages for useChat hook
+  if (!chat) redirect('/')
+  if (chat?.userId !== userId && chat?.userId !== 'anonymous') notFound()
+
   const messages = convertToUIMessages(chat?.messages || [])
-
-  if (!chat) {
-    redirect('/')
-  }
-
-  if (chat?.userId !== userId && chat?.userId !== 'anonymous') {
-    notFound()
-  }
-
   const models = await getModels()
-  return <Chat id={id} savedMessages={messages} models={models} />
+
+  return (
+    <Suspense fallback={<DefaultSkeleton />}>
+      <Chat id={id} savedMessages={messages} models={models} />
+    </Suspense>
+  )
 }

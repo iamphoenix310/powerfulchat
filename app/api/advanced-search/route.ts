@@ -250,7 +250,7 @@ async function crawlPage(result: SearXNGResult, query: string): Promise<SearXNGR
   }
 
   try {
-    const html = await fetchHtmlWithTimeout(result.url, 15000)
+    const html = await fetchHtmlWithTimeout(result.url, 6000)
     const virtualConsole = new VirtualConsole()
     virtualConsole.on('error', () => {})
     virtualConsole.on('warn', () => {})

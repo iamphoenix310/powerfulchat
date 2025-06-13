@@ -5,6 +5,7 @@ import { CHAT_ID } from '@/lib/constants'
 import type { SearchResults as TypeSearchResults } from '@/lib/types'
 import { useChat } from '@ai-sdk/react'
 import { ToolInvocation } from 'ai'
+import { AnswerSection } from './answer-section'
 import { CollapsibleMessage } from './collapsible-message'
 import { SearchSkeleton } from './default-skeleton'
 import { SearchResults } from './search-results'
@@ -22,14 +23,14 @@ export function SearchSection({
   isOpen,
   onOpenChange
 }: SearchSectionProps) {
-  const { status } = useChat({
-    id: CHAT_ID
-  })
+  const { status } = useChat({ id: CHAT_ID })
   const isLoading = status === 'submitted' || status === 'streaming'
-
   const isToolLoading = tool.state === 'call'
-  const searchResults: TypeSearchResults =
-    tool.state === 'result' ? tool.result : undefined
+
+  // 🛠 TypeScript-safe extraction of results
+  const searchResults: TypeSearchResults | undefined =
+    tool.state === 'result' ? (tool as any).result : undefined
+
   const query = tool.args?.query as string | undefined
   const includeDomains = tool.args?.includeDomains as string[] | undefined
   const includeDomainsString = includeDomains
@@ -51,6 +52,19 @@ export function SearchSection({
     </button>
   )
 
+  // ✅ Build citationMap from result URLs
+  const citationMap: Record<string, number> = {}
+  let index = 1
+  for (const result of searchResults?.results || []) {
+    if (result.url && !citationMap[result.url]) {
+      citationMap[result.url] = index++
+    }
+  }
+
+  // Optional: if using model store, get real modelId
+  // const modelId = useModelStore().currentModelId || 'unknown'
+  const modelId = 'gemini-2.0-flash' // hardcoded fallback
+
   return (
     <CollapsibleMessage
       role="assistant"
@@ -60,9 +74,7 @@ export function SearchSection({
       onOpenChange={onOpenChange}
       showIcon={false}
     >
-      {searchResults &&
-        searchResults.images &&
-        searchResults.images.length > 0 && (
+      {Array.isArray(searchResults?.images) && searchResults.images.length > 0 && (
           <Section>
             <SearchResultsImageSection
               images={searchResults.images}
@@ -73,9 +85,23 @@ export function SearchSection({
       {isLoading && isToolLoading ? (
         <SearchSkeleton />
       ) : searchResults?.results ? (
-        <Section title="Sources">
-          <SearchResults results={searchResults.results} />
-        </Section>
+        <>
+          <Section title="Sources">
+            <SearchResults results={searchResults.results} />
+          </Section>
+
+          <Section title="Summary">
+            <AnswerSection
+              content={(tool as any)?.result?.text || ''}
+              isOpen={true}
+              onOpenChange={() => {}}
+              messageId={tool.toolCallId}
+              chatId={CHAT_ID}
+              citationMap={citationMap}
+              modelId={modelId}
+            />
+          </Section>
+        </>
       ) : null}
     </CollapsibleMessage>
   )

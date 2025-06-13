@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
+import { renderWithCitations } from '@/utils/renderWithCitations'
 import 'katex/dist/katex.min.css'
 import rehypeExternalLinks from 'rehype-external-links'
 import rehypeKatex from 'rehype-katex'
@@ -12,59 +13,54 @@ import { MemoizedReactMarkdown } from './ui/markdown'
 
 export function BotMessage({
   message,
-  className
+  className,
+  citationMap = {},
+  modelId = 'unknown'
 }: {
   message: string
   className?: string
+  citationMap?: Record<string, number>
+  modelId?: string
 }) {
-  // Check if the content contains LaTeX patterns
-  const containsLaTeX = /\\\[([\s\S]*?)\\\]|\\\(([\s\S]*?)\\\)/.test(
-    message || ''
-  )
+  const containsLaTeX = /\\\[([\s\S]*?)\\\]|\\\(([\s\S]*?)\\\)/.test(message || '')
+  const processedMessage = preprocessLaTeX(message || '')
 
-  // Modify the content to render LaTeX equations if LaTeX patterns are found
-  const processedData = preprocessLaTeX(message || '')
+  // If the model is Gemini or citationMap is populated, inject clickable links
+  const htmlWithCitations = renderWithCitations(processedMessage, citationMap, modelId)
 
-  if (containsLaTeX) {
+  // Use dangerouslySetInnerHTML to render citation links only if citations are injected
+  const shouldRenderHtml = Object.keys(citationMap).length > 0 || modelId.includes('gemini')
+
+  if (shouldRenderHtml) {
     return (
-      <MemoizedReactMarkdown
-        rehypePlugins={[
-          [rehypeExternalLinks, { target: '_blank' }],
-          [rehypeKatex]
-        ]}
-        remarkPlugins={[remarkGfm, remarkMath]}
+      <div
         className={cn(
           'prose-sm prose-neutral prose-a:text-accent-foreground/50',
           className
         )}
-      >
-        {processedData}
-      </MemoizedReactMarkdown>
+        dangerouslySetInnerHTML={{ __html: htmlWithCitations }}
+      />
     )
   }
 
   return (
     <MemoizedReactMarkdown
-      rehypePlugins={[[rehypeExternalLinks, { target: '_blank' }]]}
-      remarkPlugins={[remarkGfm]}
+      rehypePlugins={[
+        [rehypeExternalLinks, { target: '_blank' }],
+        ...(containsLaTeX ? [rehypeKatex] : [])
+      ]}
+      remarkPlugins={[remarkGfm, ...(containsLaTeX ? [remarkMath] : [])]}
       className={cn(
         'prose-sm prose-neutral prose-a:text-accent-foreground/50',
         className
       )}
       components={{
         code({ node, inline, className, children, ...props }) {
-          if (children.length) {
-            if (children[0] == '▍') {
-              return (
-                <span className="mt-1 cursor-default animate-pulse">▍</span>
-              )
-            }
-
-            children[0] = (children[0] as string).replace('`▍`', '▍')
+          if (children.length && children[0] === '▍') {
+            return <span className="mt-1 cursor-default animate-pulse">▍</span>
           }
 
           const match = /language-(\w+)/.exec(className || '')
-
           if (inline) {
             return (
               <code className={className} {...props}>
@@ -85,21 +81,14 @@ export function BotMessage({
         a: Citing
       }}
     >
-      {message}
+      {processedMessage}
     </MemoizedReactMarkdown>
   )
 }
 
-// Preprocess LaTeX equations to be rendered by KaTeX
-// ref: https://github.com/remarkjs/react-markdown/issues/785
+// LaTeX preprocessor for inline/block conversion
 const preprocessLaTeX = (content: string) => {
-  const blockProcessedContent = content.replace(
-    /\\\[([\s\S]*?)\\\]/g,
-    (_, equation) => `$$${equation}$$`
-  )
-  const inlineProcessedContent = blockProcessedContent.replace(
-    /\\\(([\s\S]*?)\\\)/g,
-    (_, equation) => `$${equation}$`
-  )
-  return inlineProcessedContent
+  return content
+    .replace(/\\\[([\s\S]*?)\\\]/g, (_, eq) => `$$${eq}$$`)
+    .replace(/\\\(([\s\S]*?)\\\)/g, (_, eq) => `$${eq}$`)
 }

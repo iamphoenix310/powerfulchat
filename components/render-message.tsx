@@ -72,101 +72,113 @@ export function RenderMessage({
     }, new Map<string, ToolInvocation>())
 
     return Array.from(toolDataMap.values())
-  }, [message.annotations])
+        }, [message.annotations])
 
-  // Extract the unified reasoning annotation directly.
-  const reasoningAnnotation = useMemo(() => {
-    const annotations = message.annotations as any[] | undefined
-    if (!annotations) return null
-    return (
-      annotations.find(a => a.type === 'reasoning' && a.data !== undefined) ||
-      null
-    )
-  }, [message.annotations])
+        // Extract the unified reasoning annotation directly.
+        const reasoningAnnotation = useMemo(() => {
+          const annotations = message.annotations as any[] | undefined
+          if (!annotations) return null
+          return (
+            annotations.find(a => a.type === 'reasoning' && a.data !== undefined) ||
+            null
+          )
+        }, [message.annotations])
 
-  // Extract the reasoning time and reasoning content from the annotation.
-  // If annotation.data is an object, use its fields. Otherwise, default to a time of 0.
-  const reasoningTime = useMemo(() => {
-    if (!reasoningAnnotation) return 0
-    if (
-      typeof reasoningAnnotation.data === 'object' &&
-      reasoningAnnotation.data !== null
-    ) {
-      return reasoningAnnotation.data.time ?? 0
-    }
-    return 0
-  }, [reasoningAnnotation])
+        // Extract the reasoning time and reasoning content from the annotation.
+        // If annotation.data is an object, use its fields. Otherwise, default to a time of 0.
+        const reasoningTime = useMemo(() => {
+          if (!reasoningAnnotation) return 0
+          if (
+            typeof reasoningAnnotation.data === 'object' &&
+            reasoningAnnotation.data !== null
+          ) {
+            return reasoningAnnotation.data.time ?? 0
+          }
+          return 0
+        }, [reasoningAnnotation])
 
-  if (message.role === 'user') {
-    return (
-      <UserMessage
-        message={message.content}
-        messageId={messageId}
-        onUpdateMessage={onUpdateMessage}
-      />
-    )
-  }
+        if (message.role === 'user') {
+          return (
+            <UserMessage
+              message={message.content}
+              messageId={messageId}
+              onUpdateMessage={onUpdateMessage}
+            />
+          )
+        }
 
-  // New way: Use parts instead of toolInvocations
-  return (
-    <>
-      {toolData.map(tool => (
-        <ToolSection
-          key={tool.toolCallId}
-          tool={tool}
-          isOpen={getIsOpen(tool.toolCallId)}
-          onOpenChange={open => onOpenChange(tool.toolCallId, open)}
-          addToolResult={addToolResult}
-        />
-      ))}
-      {message.parts?.map((part, index) => {
-        // Check if this is the last part in the array
-        const isLastPart = index === (message.parts?.length ?? 0) - 1
-
-        switch (part.type) {
-          case 'tool-invocation':
-            return (
+        // New way: Use parts instead of toolInvocations
+        return (
+          <>
+            {toolData.map(tool => (
               <ToolSection
-                key={`${messageId}-tool-${index}`}
-                tool={part.toolInvocation}
-                isOpen={getIsOpen(part.toolInvocation.toolCallId)}
-                onOpenChange={open =>
-                  onOpenChange(part.toolInvocation.toolCallId, open)
-                }
+                key={tool.toolCallId}
+                tool={tool}
+                isOpen={getIsOpen(tool.toolCallId)}
+                onOpenChange={open => onOpenChange(tool.toolCallId, open)}
                 addToolResult={addToolResult}
               />
-            )
-          case 'text':
-            // Only show actions if this is the last part and it's a text part
-            return (
-              <AnswerSection
-                key={`${messageId}-text-${index}`}
-                content={part.text}
-                isOpen={getIsOpen(messageId)}
-                onOpenChange={open => onOpenChange(messageId, open)}
-                chatId={chatId}
-                showActions={isLastPart}
-                messageId={messageId}
-                reload={reload}
-              />
-            )
-          case 'reasoning':
-            return (
-              <ReasoningSection
-                key={`${messageId}-reasoning-${index}`}
-                content={{
-                  reasoning: part.reasoning,
-                  time: reasoningTime
-                }}
-                isOpen={getIsOpen(messageId)}
-                onOpenChange={open => onOpenChange(messageId, open)}
-              />
-            )
-          // Add other part types as needed
-          default:
-            return null
-        }
-      })}
+            ))}
+           {Array.isArray(message.parts) && message.parts.length > 0 ? (
+            message.parts.map((part, index) => {
+              const isLastPart = index === (message.parts?.length ?? 0) - 1
+
+              switch (part.type) {
+                case 'tool-invocation':
+                  return (
+                    <ToolSection
+                      key={`${messageId}-tool-${index}`}
+                      tool={part.toolInvocation}
+                      isOpen={getIsOpen(part.toolInvocation.toolCallId)}
+                      onOpenChange={open =>
+                        onOpenChange(part.toolInvocation.toolCallId, open)
+                      }
+                      addToolResult={addToolResult}
+                    />
+                  )
+                case 'text':
+                  return (
+                    <AnswerSection
+                      key={`${messageId}-text-${index}`}
+                      content={part.text}
+                      isOpen={getIsOpen(messageId)}
+                      onOpenChange={open => onOpenChange(messageId, open)}
+                      chatId={chatId}
+                      showActions={isLastPart}
+                      messageId={messageId}
+                      reload={reload}
+                    />
+                  )
+                case 'reasoning':
+                  return (
+                    <ReasoningSection
+                      key={`${messageId}-reasoning-${index}`}
+                      content={{
+                        reasoning: part.reasoning,
+                        time: reasoningTime
+                      }}
+                      isOpen={getIsOpen(messageId)}
+                      onOpenChange={open => onOpenChange(messageId, open)}
+                    />
+                  )
+                default:
+                  return null
+              }
+            })
+          ) : message.role === 'assistant' ? (
+            <AnswerSection
+              key={`${messageId}-fallback`}
+              content={typeof message.content === 'string' ? message.content : ''}
+              isOpen={getIsOpen(messageId)}
+              onOpenChange={open => onOpenChange(messageId, open)}
+              chatId={chatId}
+              showActions={true}
+              messageId={messageId}
+              reload={reload}
+            />
+          ) : null}
+
+
       {relatedQuestions && relatedQuestions.length > 0 && (
         <RelatedQuestions
           annotations={relatedQuestions as JSONValue[]}
