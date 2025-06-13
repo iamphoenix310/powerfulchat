@@ -1,6 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { client, urlFor } from '@/app/utils/sanityClient' // Assuming sanityClient.ts is here
-import type { SanityPerson } from '@/app/types'; // Define this type, ensure image has 'alt'
+import { client, urlFor } from '@/app/utils/sanityClient'; // Assuming sanityClient.ts is here
+import { NextRequest, NextResponse } from 'next/server';
 
 const BASE_URL = 'https://visitpowerful.com'
 

@@ -2,7 +2,7 @@ import { visit } from 'unist-util-visit'
 
 export function mentionPlugin() {
   return (tree: any) => {
-    visit(tree, 'text', (node: any, index: number | undefined, parent: any) => {
+    visit(tree, 'text', (node: any, index: number | null, parent: any) => {
       const mentionRegex = /@(\w+)/g
       const matches = [...node.value.matchAll(mentionRegex)]
 

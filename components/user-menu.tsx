@@ -26,7 +26,8 @@ export default function UserMenu() {
 
   const user = session?.user
   const userName = user?.username || user?.name || 'User'
-  const avatarUrl = user?.profileImage || user?.image || null
+  const avatarUrl = (user as any)?.profileImage || user?.image || null
+
 
   const getInitials = (name: string | undefined | null, email: string | undefined | null) => {
     if (name && name !== 'User') {

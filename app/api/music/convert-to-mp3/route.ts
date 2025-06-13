@@ -1,14 +1,14 @@
-import { client as sanityClient } from '@/app/utils/sanityClient'
-import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
+import { client as sanityClient } from '@/app/utils/sanityClient';
+import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import ffmpegPathPkg from 'ffmpeg-static'; // Installed
-import ffmpeg from 'fluent-ffmpeg'
-import { createWriteStream, promises as fsPromises } from 'fs'
-import { NextRequest, NextResponse } from 'next/server'
-import { tmpdir } from 'os'
-import path, { join } from 'path'
-import { Readable } from 'stream'
-import { v4 as uuidv4 } from 'uuid'
+import ffmpeg from 'fluent-ffmpeg';
+import { createWriteStream, promises as fsPromises } from 'fs';
+import { NextRequest, NextResponse } from 'next/server';
+import { tmpdir } from 'os';
+import path, { join } from 'path';
+import { Readable } from 'stream';
+import { v4 as uuidv4 } from 'uuid';
 
 const resolvedFFmpegPath =
   ffmpegPathPkg?.includes('.next')
@@ -77,12 +77,12 @@ export async function POST(req: NextRequest) {
       ffmpeg(tmpWavPath)
         .audioBitrate(320)
         .toFormat('mp3')
-        .on('start', (cmd) => console.log('[FFMPEG] Command:', cmd))
+        .on('start', (cmd: string) => console.log('[FFMPEG] Command:', cmd))
         .on('end', () => {
           console.log('[MP3] FFmpeg conversion complete ✅')
           resolve()
         })
-        .on('error', (err) => {
+        .on('error', (err: Error) => {
           console.error('[MP3] FFmpeg error:', err)
           reject(err)
         })
