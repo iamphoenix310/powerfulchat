@@ -13,8 +13,9 @@ type Props = {
 
 export async function generateMetadata(
   { params }: Props,
-  _parent?: ResolvingMetadata
+  parent: Promise<ResolvingMetadata>
 ): Promise<Metadata> {
+
   const { username, postId } = await params
 
   const query = `*[_type == "userFeed" && _id == $postId && author->username == $username][0]{
