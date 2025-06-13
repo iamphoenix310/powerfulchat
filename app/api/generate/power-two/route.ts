@@ -57,7 +57,7 @@ export async function POST(req: Request) {
       } as any)
     }
 
-    const images = response.data.map((img: any) =>
+    const images = (response.data ?? []).map((img: any) =>
       img.url ? img.url : `data:image/png;base64,${img.b64_json}`
     )
 
