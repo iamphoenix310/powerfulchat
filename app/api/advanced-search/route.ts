@@ -1,16 +1,14 @@
 import {
-  SearXNGResponse,
   SearXNGResult,
-  SearXNGSearchResults,
-  SearchResultItem
+  SearXNGSearchResults
 } from '@/lib/types'
 import { Redis } from '@upstash/redis'
 import http from 'http'
 import https from 'https'
 import { JSDOM, VirtualConsole } from 'jsdom'
 import { NextResponse } from 'next/server'
+import pLimit from 'p-limit'
 import { createClient } from 'redis'
-
 /**
  * Maximum number of results to fetch from SearXNG.
  * Increasing this value can improve result quality but may impact performance.
@@ -169,6 +167,7 @@ export async function POST(request: Request) {
   }
 }
 
+
 async function advancedSearchXNGSearch(
   query: string,
   maxResults: number = 10,
@@ -177,215 +176,145 @@ async function advancedSearchXNGSearch(
   excludeDomains: string[] = []
 ): Promise<SearXNGSearchResults> {
   const apiUrl = process.env.SEARXNG_API_URL
-  if (!apiUrl) {
-    throw new Error('SEARXNG_API_URL is not set in the environment variables')
-  }
+  if (!apiUrl) throw new Error('SEARXNG_API_URL is not set')
 
-  const SEARXNG_ENGINES =
-    process.env.SEARXNG_ENGINES || 'google,bing,duckduckgo,wikipedia'
+  const SEARXNG_ENGINES = process.env.SEARXNG_ENGINES || 'google,bing,duckduckgo,wikipedia'
   const SEARXNG_TIME_RANGE = process.env.SEARXNG_TIME_RANGE || 'None'
   const SEARXNG_SAFESEARCH = process.env.SEARXNG_SAFESEARCH || '0'
-  const SEARXNG_CRAWL_MULTIPLIER = parseInt(
-    process.env.SEARXNG_CRAWL_MULTIPLIER || '4',
-    10
-  )
+  const SEARXNG_CRAWL_MULTIPLIER = parseInt(process.env.SEARXNG_CRAWL_MULTIPLIER || '4', 10)
+  const limit = pLimit(5)
 
-  try {
-    const url = new URL(`${apiUrl}/search`)
-    url.searchParams.append('q', query)
-    url.searchParams.append('format', 'json')
-    url.searchParams.append('categories', 'general,images')
+  const url = new URL(`${apiUrl}/search`)
+  url.searchParams.append('q', query)
+  url.searchParams.append('format', 'json')
+  url.searchParams.append('categories', 'general,images')
+  if (SEARXNG_TIME_RANGE !== 'None') url.searchParams.append('time_range', SEARXNG_TIME_RANGE)
+  url.searchParams.append('safesearch', SEARXNG_SAFESEARCH)
+  url.searchParams.append('engines', SEARXNG_ENGINES)
+  url.searchParams.append('pageno', String(Math.ceil(maxResults / 10)))
 
-    // Add time_range if it's not 'None'
-    if (SEARXNG_TIME_RANGE !== 'None') {
-      url.searchParams.append('time_range', SEARXNG_TIME_RANGE)
-    }
+  const data = await fetchJsonWithRetry(url.toString(), 3)
+  if ('error' in data || !Array.isArray(data.results)) {
+    throw new Error('Invalid response structure from SearXNG')
+  }
 
-    url.searchParams.append('safesearch', SEARXNG_SAFESEARCH)
-    url.searchParams.append('engines', SEARXNG_ENGINES)
+  let generalResults = data.results.filter((r: SearXNGResult) => r && !r.img_src)
 
-    const resultsPerPage = 10
-    const pageno = Math.ceil(maxResults / resultsPerPage)
-    url.searchParams.append('pageno', String(pageno))
-
-    //console.log('SearXNG API URL:', url.toString()) // Log the full URL for debugging
-
-    const data:
-      | SearXNGResponse
-      | { error: string; status: number; data: string } =
-      await fetchJsonWithRetry(url.toString(), 3)
-
-    if ('error' in data) {
-      console.error('Invalid response from SearXNG:', data)
-      throw new Error(
-        `Invalid response from SearXNG: ${data.error}. Status: ${data.status}. Data: ${data.data}`
+  if (includeDomains.length || excludeDomains.length) {
+    generalResults = generalResults.filter((result: { url: string | URL }) => {
+      const domain = new URL(result.url).hostname
+      return (
+        (!includeDomains.length || includeDomains.some(d => domain.includes(d))) &&
+        (!excludeDomains.length || !excludeDomains.some(d => domain.includes(d)))
       )
-    }
+    })
+  }
 
-    if (!data || !Array.isArray(data.results)) {
-      console.error('Invalid response structure from SearXNG:', data)
-      throw new Error('Invalid response structure from SearXNG')
-    }
-
-    let generalResults = data.results.filter(
-      (result: SearXNGResult) => result && !result.img_src
+  if (searchDepth === 'advanced') {
+    const crawledResults = await Promise.all(
+      generalResults
+        .slice(0, maxResults * SEARXNG_CRAWL_MULTIPLIER)
+        .map((result: SearXNGResult) => limit(() => crawlPage(result, query)))
     )
 
-    // Apply domain filtering manually
-    if (includeDomains.length > 0 || excludeDomains.length > 0) {
-      generalResults = generalResults.filter(result => {
-        const domain = new URL(result.url).hostname
-        return (
-          (includeDomains.length === 0 ||
-            includeDomains.some(d => domain.includes(d))) &&
-          (excludeDomains.length === 0 ||
-            !excludeDomains.some(d => domain.includes(d)))
-        )
-      })
-    }
-
-    if (searchDepth === 'advanced') {
-      const crawledResults = await Promise.all(
-        generalResults
-          .slice(0, maxResults * SEARXNG_CRAWL_MULTIPLIER)
-          .map(result => crawlPage(result, query))
-      )
-      generalResults = crawledResults
-        .filter(result => result !== null && isQualityContent(result.content))
-        .map(result => result as SearXNGResult)
-
-      const MIN_RELEVANCE_SCORE = 10
-      generalResults = generalResults
-        .map(result => ({
-          ...result,
-          score: calculateRelevanceScore(result, query)
-        }))
-        .filter(result => result.score >= MIN_RELEVANCE_SCORE)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, maxResults)
-    }
-
-    generalResults = generalResults.slice(0, maxResults)
-
-    const imageResults = (data.results || [])
-      .filter((result: SearXNGResult) => result && result.img_src)
+    generalResults = crawledResults
+      .filter(r => r !== null && isQualityContent(r.content))
+      .map(r => ({ ...r!, score: calculateRelevanceScore(r!, query) }))
+      .sort((a, b) => b.score - a.score)
       .slice(0, maxResults)
+  }
 
-    return {
-      results: generalResults.map(
-        (result: SearXNGResult): SearchResultItem => ({
-          title: result.title || '',
-          url: result.url || '',
-          content: result.content || ''
-        })
-      ),
-      query: data.query || query,
-      images: imageResults
-        .map((result: SearXNGResult) => {
-          const imgSrc = result.img_src || ''
-          return imgSrc.startsWith('http') ? imgSrc : `${apiUrl}${imgSrc}`
-        })
-        .filter(Boolean),
-      number_of_results: data.number_of_results || generalResults.length
-    }
-  } catch (error) {
-    console.error('SearchXNG API error:', error)
-    return {
-      results: [],
-      query: query,
-      images: [],
-      number_of_results: 0
-    }
+  const imageResults = data.results
+    .filter((r: SearXNGResult) => r && r.img_src)
+    .slice(0, maxResults)
+
+  return {
+    results: generalResults.map((r: { title: any; url: any; content: any }) => ({
+      title: r.title || '',
+      url: r.url || '',
+      content: r.content || ''
+    })),
+    query: data.query || query,
+    images: imageResults
+      .map((r: { img_src: string }) => r.img_src?.startsWith('http') ? r.img_src : `${apiUrl}${r.img_src}`)
+      .filter(Boolean),
+    number_of_results: data.number_of_results || generalResults.length
   }
 }
 
-async function crawlPage(
-  result: SearXNGResult,
-  query: string
-): Promise<SearXNGResult> {
-  try {
-    const html = await fetchHtmlWithTimeout(result.url, 20000);
 
-    const virtualConsole = new VirtualConsole();
-    virtualConsole.on('error', () => {});
-    virtualConsole.on('warn', () => {});
+async function crawlPage(result: SearXNGResult, query: string): Promise<SearXNGResult> {
+  const blockedDomains = ['.pk', 'thenews.com.pk']
+  if (blockedDomains.some(domain => result.url.includes(domain))) {
+    return { ...result, content: 'Skipped crawling due to slow or blocked domain.' }
+  }
+
+  try {
+    const html = await fetchHtmlWithTimeout(result.url, 15000)
+    const virtualConsole = new VirtualConsole()
+    virtualConsole.on('error', () => {})
+    virtualConsole.on('warn', () => {})
 
     const dom = new JSDOM(html, {
       runScripts: 'outside-only',
       resources: 'usable',
-      virtualConsole,
-    });
-    const document = dom.window.document;
+      virtualConsole
+    })
 
-    // Remove script, style, nav, header, and footer elements
-    document
-      .querySelectorAll('script, style, nav, header, footer')
-      .forEach((el: Element) => el.remove());
+    const document = dom.window.document
+    document.querySelectorAll('script, style, nav, header, footer')
+      .forEach((el: Element) => el.remove())
 
     const mainContent =
       document.querySelector('main') ||
       document.querySelector('article') ||
       document.querySelector('.content') ||
       document.querySelector('#content') ||
-      document.body;
+      document.body
 
     if (mainContent) {
-      const priorityElements = mainContent.querySelectorAll('h1, h2, h3, p') as NodeListOf<Element>;
-      let extractedText = Array.from<Element>(priorityElements)
+      const primary = mainContent.querySelectorAll('h1, h2, h3, p')
+      let extracted = Array.from(primary)
         .map(el => el.textContent?.trim())
         .filter(Boolean)
-        .join('\n\n');
+        .join('\n\n')
 
-      if (extractedText.length < 500) {
-        const contentElements = mainContent.querySelectorAll(
-          'h4, h5, h6, li, td, th, blockquote, pre, code'
-        ) as NodeListOf<Element>;
-        extractedText +=
-          '\n\n' +
-          Array.from<Element>(contentElements)
-            .map(el => el.textContent?.trim())
-            .filter(Boolean)
-            .join('\n\n');
+      if (extracted.length < 500) {
+        const secondary = mainContent.querySelectorAll('h4, h5, h6, li, td, th, blockquote, pre, code')
+        extracted += '\n\n' + Array.from(secondary)
+          .map(el => el.textContent?.trim())
+          .filter(Boolean)
+          .join('\n\n')
       }
 
-      const metaDescription =
-        document
-          .querySelector('meta[name="description"]')
-          ?.getAttribute('content') || '';
-      const metaKeywords =
-        document
-          .querySelector('meta[name="keywords"]')
-          ?.getAttribute('content') || '';
-      const ogTitle =
-        document
-          .querySelector('meta[property="og:title"]')
-          ?.getAttribute('content') || '';
-      const ogDescription =
-        document
-          .querySelector('meta[property="og:description"]')
-          ?.getAttribute('content') || '';
+      const meta = [
+        document.querySelector('meta[name="description"]')?.getAttribute('content') || '',
+        document.querySelector('meta[name="keywords"]')?.getAttribute('content') || '',
+        document.querySelector('meta[property="og:title"]')?.getAttribute('content') || '',
+        document.querySelector('meta[property="og:description"]')?.getAttribute('content') || ''
+      ].join('\n\n')
 
-      extractedText = `${result.title}\n\n${ogTitle}\n\n${metaDescription}\n\n${ogDescription}\n\n${metaKeywords}\n\n${extractedText}`;
+      result.content = highlightQueryTerms(
+        `${result.title}\n\n${meta}\n\n${extracted}`.substring(0, 10000),
+        query
+      )
 
-      extractedText = extractedText.substring(0, 10000);
-
-      result.content = highlightQueryTerms(extractedText, query);
-
-      const publishedDate = extractPublicationDate(document);
+      const publishedDate = extractPublicationDate(document)
       if (publishedDate) {
-        result.publishedDate = publishedDate.toISOString();
+        result.publishedDate = publishedDate.toISOString()
       }
     }
 
-    return result;
+    return result
   } catch (error) {
-    console.error(`Error crawling ${result.url}:`, error);
+    console.error(`Error crawling ${result.url}:`, error)
     return {
       ...result,
-      content: result.content || 'Content unavailable due to crawling error.',
-    };
+      content: result.content || 'Content unavailable due to crawling error.'
+    }
   }
 }
+
 
 function highlightQueryTerms(content: string, query: string): string {
   try {
@@ -560,7 +489,7 @@ function fetchJson(url: string): Promise<any> {
       request.destroy()
       reject(new Error('Request timed out'))
     })
-    request.setTimeout(15000) // 15 second timeout
+    request.setTimeout(8000) // 15 second timeout
   })
 }
 
@@ -612,7 +541,7 @@ function fetchHtml(url: string): Promise<string> {
       //reject(new Error(`Request timed out for ${url}`))
       resolve('')
     })
-    request.setTimeout(10000) // 10 second timeout
+    request.setTimeout(12000) // 10 second timeout
   })
 }
 
