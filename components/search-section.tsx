@@ -89,8 +89,6 @@ export function SearchSection({
           <Section title="Sources">
             <SearchResults results={searchResults.results} />
           </Section>
-
-          <Section title="Summary">
             <AnswerSection
               content={(tool as any)?.result?.text || ''}
               isOpen={true}
@@ -100,7 +98,6 @@ export function SearchSection({
               citationMap={citationMap}
               modelId={modelId}
             />
-          </Section>
         </>
       ) : null}
     </CollapsibleMessage>
