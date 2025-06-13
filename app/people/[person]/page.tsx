@@ -1,16 +1,13 @@
 import { client, urlFor } from "@/app/utils/sanityClient";
 import PersonPage from "@/components/People/singlePerson";
-import type { Metadata } from "next";
-import SeoContentForm from "@/components/People/SeoContentForm/SeoContentForm";
+import type { Metadata, ResolvingMetadata } from "next";
 
 interface PersonProps {
-  params: {
-    person: string;
-  };
+  params: Promise<{ person: string }>;
 }
 
 export default async function SinglePerson({ params }: PersonProps) {
-  const slug = params.person;
+  const { person: slug } = await params; // Await params and destructure
 
   const personDetail = await client.fetch(
     `*[_type == "facesCelebs" && slug.current == $slug][0]`,
@@ -28,9 +25,11 @@ export default async function SinglePerson({ params }: PersonProps) {
   );
 }
 
-
-export async function generateMetadata({ params }: { params: { person: string } }): Promise<Metadata> {
-  const slug = params.person;
+export async function generateMetadata(
+  { params }: PersonProps,
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  const { person: slug } = await params; // Await params and destructure
 
   const personDetail = await client.fetch(
     `*[_type == "facesCelebs" && slug.current == $slug][0]`,

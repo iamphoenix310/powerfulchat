@@ -1,21 +1,30 @@
-import { client, urlFor } from "@/app/utils/sanityClient"
-import { notFound } from "next/navigation"
-import type { Metadata } from "next"
-import ProductDetailClient from "@/components/Products/Display/ProductDetailClient"
+import { client, urlFor } from "@/app/utils/sanityClient";
+import ProductDetailClient from "@/components/Products/Display/ProductDetailClient";
+import type { Metadata, ResolvingMetadata } from "next";
+import { notFound } from "next/navigation";
 
-export const revalidate = 0
+export const revalidate = 0;
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+type Props = {
+  params: Promise<{ slug: string }>;
+};
+
+export async function generateMetadata(
+  { params }: Props,
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  const { slug } = await params; // Await params and destructure
+
   const product = await client.fetch(
     `*[_type == "products" && slug.current == $slug][0]{
       title,
       description,
       mainimage
     }`,
-    { slug: params.slug }
-  )
+    { slug }
+  );
 
-  if (!product) return {}
+  if (!product) return {};
 
   return {
     title: product.title,
@@ -39,11 +48,12 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       description: product.description || "Explore premium digital products on Powerful.",
       images: [urlFor(product.mainimage)],
     },
-  }
+  };
 }
 
+export default async function ProductDetailPage({ params }: Props) {
+  const { slug } = await params; // Await params and destructure
 
-export default async function ProductDetailPage({ params }: { params: { slug: string } }) {
   const product = await client.fetch(
     `*[_type == "products" && slug.current == $slug][0]{
       _id,
@@ -61,10 +71,10 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
       tags,
       creator->{_id, username, email, image}
     }`,
-    { slug: params.slug }
-  )
+    { slug }
+  );
 
-  if (!product) return notFound()
+  if (!product) return notFound();
 
-  return <ProductDetailClient product={product} />
+  return <ProductDetailClient product={product} />;
 }

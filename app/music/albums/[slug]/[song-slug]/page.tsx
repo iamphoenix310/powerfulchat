@@ -1,18 +1,24 @@
-import { client, urlFor } from '@/app/utils/sanityClient'
-import { notFound } from 'next/navigation'
-import Image from 'next/image'
-import { normalizeTrackData } from '@/app/lib/music/normalizeTrackData'
-import AlbumPlayerWithQueue from '@/components/Music/Albums/AlbumPlayerWithQueue'
-import Link from 'next/link'
-import type { Metadata } from 'next'
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+import { normalizeTrackData } from '@/app/lib/music/normalizeTrackData';
+import { client, urlFor } from '@/app/utils/sanityClient';
+import AlbumPlayerWithQueue from '@/components/Music/Albums/AlbumPlayerWithQueue';
+import type { Metadata, ResolvingMetadata } from 'next';
+import Image from 'next/image';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { slug: string; 'song-slug': string }
-}): Promise<Metadata> {
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+type Props = {
+  params: Promise<{ slug: string; 'song-slug': string }>;
+};
+
+export async function generateMetadata(
+  { params }: Props,
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  const { slug, 'song-slug': songSlug } = await params; // Await params
+
   const album = await client.fetch(
     `*[_type == "musicAlbum" && slug.current == $slug][0]{
       "songs": songs[]->{
@@ -24,18 +30,18 @@ export async function generateMetadata({
         }
       }
     }`,
-    { slug: params.slug }
-  )
+    { slug }
+  );
 
-  if (!album?.songs || album.songs.length === 0) return {}
+  if (!album?.songs || album.songs.length === 0) return {};
 
-  const song = album.songs.find((s: any) => s.slug?.current === params['song-slug'])
+  const song = album.songs.find((s: any) => s.slug?.current === songSlug);
 
-  if (!song) return {}
+  if (!song) return {};
 
-  const title = song.title || 'Now Playing'
-  const description = song.description || 'Play this on Powerful'
-  const imageUrl = song.coverImage ? urlFor(song.coverImage) : '/default-cover.jpg'
+  const title = song.title || 'Now Playing';
+  const description = song.description || 'Play this on Powerful';
+  const imageUrl = song.coverImage ? urlFor(song.coverImage) : '/default-cover.jpg';
 
   return {
     title,
@@ -44,7 +50,7 @@ export async function generateMetadata({
     openGraph: {
       title,
       description,
-      url: `https://visitpowerful.com/music/albums/${params.slug}/${params['song-slug']}`,
+      url: `https://visitpowerful.com/music/albums/${slug}/${songSlug}`, // Use awaited slugs
       images: [
         {
           url: imageUrl,
@@ -60,20 +66,12 @@ export async function generateMetadata({
       description,
       images: [imageUrl],
     },
-  }
-}
-
-
-
-
-interface Props {
-  params: {
-    slug: string        // album slug
-    'song-slug': string // song slug
-  }
+  };
 }
 
 export default async function AlbumSongPage({ params }: Props) {
+  const { slug, 'song-slug': songSlug } = await params; // Await params
+
   const album = await client.fetch(
     `*[_type == "musicAlbum" && slug.current == $slug][0]{
       _id,
@@ -95,10 +93,10 @@ export default async function AlbumSongPage({ params }: Props) {
         }
       }
     }`,
-    { slug: params.slug }
-  )
+    { slug }
+  );
 
-  if (!album || !album.songs || album.songs.length === 0) return notFound()
+  if (!album || !album.songs || album.songs.length === 0) return notFound();
 
   const formattedTracks = normalizeTrackData(
     album.songs
@@ -107,27 +105,25 @@ export default async function AlbumSongPage({ params }: Props) {
         ...song,
         slug: song.slug?.current,
         coverImageUrl: song.coverImage ? urlFor(song.coverImage) : urlFor(album.coverImage),
-        albumSlug: params.slug // ✅ attach album slug for routing
+        albumSlug: slug // Use awaited slug
       })),
     'album'
-  )
+  );
 
-  // ✅ Set the clicked song as first in queue
-const currentIndex = formattedTracks.findIndex(t => t.slug === params['song-slug'])
+  const currentIndex = formattedTracks.findIndex(t => t.slug === songSlug);
 
-if (currentIndex === -1) return notFound()
-
+  if (currentIndex === -1) return notFound();
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-10">
-        <div className="mb-4">
-      <Link
-        href={`/music/albums/${params.slug}`}
-        className="text-gray-600 hover:underline text-sm inline-flex items-center gap-1"
-      >
-        ← Back to Album
-      </Link>
-    </div>
+      <div className="mb-4">
+        <Link
+          href={`/music/albums/${slug}`} // Use awaited slug
+          className="text-gray-600 hover:underline text-sm inline-flex items-center gap-1"
+        >
+          ← Back to Album
+        </Link>
+      </div>
       <div className="flex flex-col sm:flex-row items-center gap-6">
         {album.coverImage && (
           <Image
@@ -146,7 +142,6 @@ if (currentIndex === -1) return notFound()
       </div>
 
       <AlbumPlayerWithQueue trackList={formattedTracks} initialIndex={currentIndex} />
-
     </div>
-  )
+  );
 }

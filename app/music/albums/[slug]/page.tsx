@@ -1,18 +1,22 @@
-import { client, urlFor } from '@/app/utils/sanityClient'
-import Image from 'next/image'
-import Link from 'next/link'
-import { notFound } from 'next/navigation'
-import type { Metadata } from 'next'
+import { client, urlFor } from '@/app/utils/sanityClient';
+import type { Metadata, ResolvingMetadata } from 'next';
+import Image from 'next/image';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
 
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
+type Props = {
+  params: Promise<{ slug: string }>;
+};
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { slug: string }
-}): Promise<Metadata> {
+export async function generateMetadata(
+  { params }: Props,
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  const { slug } = await params; // Await params
+
   const album = await client.fetch(
     `*[_type == "musicAlbum" && slug.current == $slug][0]{
       title,
@@ -21,23 +25,23 @@ export async function generateMetadata({
         asset->
       }
     }`,
-    { slug: params.slug }
-  )
+    { slug }
+  );
 
-  if (!album) return {}
+  if (!album) return {};
 
-  const title = album.title || 'Album on Powerful'
-  const description = album.description || 'Explore this music album on Powerful.'
-  const imageUrl = album.coverImage ? urlFor(album.coverImage) : '/default-cover.jpg'
+  const title = album.title || 'Album on Powerful';
+  const description = album.description || 'Explore this music album on Powerful.';
+  const imageUrl = album.coverImage ? urlFor(album.coverImage) : '/default-cover.jpg';
 
   return {
     title,
     description,
-    robots: 'index, follow', // ✅ add this line
+    robots: 'index, follow',
     openGraph: {
       title,
       description,
-      url: `https://visitpowerful.com/music/albums/${params.slug}`,
+      url: `https://visitpowerful.com/music/albums/${slug}`, // Use awaited slug
       images: [
         {
           url: imageUrl,
@@ -53,14 +57,12 @@ export async function generateMetadata({
       description,
       images: [imageUrl],
     },
-  }
+  };
 }
 
-export default async function AlbumOverviewPage({
-  params,
-}: {
-  params: { slug: string }
-}) {
+export default async function AlbumOverviewPage({ params }: Props) {
+  const { slug } = await params; // Await params
+
   const album = await client.fetch(
     `*[_type == "musicAlbum" && slug.current == $slug][0]{
       title,
@@ -77,15 +79,15 @@ export default async function AlbumOverviewPage({
         }
       }
     }`,
-    { slug: params.slug }
-  )
+    { slug }
+  );
 
-  if (!album) return notFound()
+  if (!album) return notFound();
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-10 space-y-10">
       <Link href="/music" className="text-gray-500 hover:underline">
-        &larr; Back to Music
+        ← Back to Music
       </Link>
 
       <div className="flex flex-col sm:flex-row items-center gap-6">
@@ -124,7 +126,7 @@ export default async function AlbumOverviewPage({
                 )}
                 <div>
                   <Link
-                    href={`/music/albums/${params.slug}/${song.slug?.current}`}
+                    href={`/music/albums/${slug}/${song.slug?.current}`} // Use awaited slug
                     className="text-lg font-medium text-black-600 hover:underline"
                   >
                     {song.title}
@@ -139,5 +141,5 @@ export default async function AlbumOverviewPage({
         )}
       </div>
     </div>
-  )
+  );
 }
