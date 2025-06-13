@@ -330,20 +330,20 @@ async function crawlPage(
       document.body;
 
     if (mainContent) {
-      const priorityElements = mainContent.querySelectorAll('h1, h2, h3, p');
-      let extractedText = Array.from(priorityElements)
-        .map((el: Element) => el.textContent?.trim()) // Explicitly type el as Element
+      const priorityElements = mainContent.querySelectorAll('h1, h2, h3, p') as NodeListOf<Element>;
+      let extractedText = Array.from<Element>(priorityElements)
+        .map(el => el.textContent?.trim())
         .filter(Boolean)
         .join('\n\n');
 
       if (extractedText.length < 500) {
         const contentElements = mainContent.querySelectorAll(
           'h4, h5, h6, li, td, th, blockquote, pre, code'
-        );
+        ) as NodeListOf<Element>;
         extractedText +=
           '\n\n' +
-          Array.from(contentElements)
-            .map((el: Element) => el.textContent?.trim()) // Explicitly type el as Element
+          Array.from<Element>(contentElements)
+            .map(el => el.textContent?.trim())
             .filter(Boolean)
             .join('\n\n');
       }
