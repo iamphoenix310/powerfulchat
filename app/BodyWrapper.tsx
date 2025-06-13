@@ -12,7 +12,9 @@ import { cn } from '@/lib/utils'
 import { Analytics } from '@vercel/analytics/next'
 import { Inter as FontSans } from 'next/font/google'
 import { usePathname } from 'next/navigation'
+import Script from 'next/script'
 import { Providers } from './providers'
+
 
 const fontSans = FontSans({
   subsets: ['latin'],
@@ -31,6 +33,22 @@ export default function BodyWrapper({ children }: { children: React.ReactNode })
         !isChatLike && 'overflow-y-auto'
       )}
     >
+      <Script
+        strategy="lazyOnload"
+        src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}`}
+      />
+
+      <Script id="google-analytics-script" strategy="lazyOnload">
+        {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', '${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}', {
+            page_path: window.location.pathname,
+          });
+        `}
+      </Script>
+
       <Providers>
         <ThemeProvider
           attribute="class"
