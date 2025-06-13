@@ -304,94 +304,86 @@ async function crawlPage(
   query: string
 ): Promise<SearXNGResult> {
   try {
-    const html = await fetchHtmlWithTimeout(result.url, 20000)
+    const html = await fetchHtmlWithTimeout(result.url, 20000);
 
-    // virtual console to suppress JSDOM warnings
-    const virtualConsole = new VirtualConsole()
-    virtualConsole.on('error', () => {})
-    virtualConsole.on('warn', () => {})
+    const virtualConsole = new VirtualConsole();
+    virtualConsole.on('error', () => {});
+    virtualConsole.on('warn', () => {});
 
     const dom = new JSDOM(html, {
       runScripts: 'outside-only',
       resources: 'usable',
-      virtualConsole
-    })
-    const document = dom.window.document
+      virtualConsole,
+    });
+    const document = dom.window.document;
 
     // Remove script, style, nav, header, and footer elements
     document
       .querySelectorAll('script, style, nav, header, footer')
-      .forEach((el: Element) => el.remove())
+      .forEach((el: Element) => el.remove());
 
     const mainContent =
       document.querySelector('main') ||
       document.querySelector('article') ||
       document.querySelector('.content') ||
       document.querySelector('#content') ||
-      document.body
+      document.body;
 
     if (mainContent) {
-      // Prioritize specific content elements
-      const priorityElements = mainContent.querySelectorAll('h1, h2, h3, p')
+      const priorityElements = mainContent.querySelectorAll('h1, h2, h3, p');
       let extractedText = Array.from(priorityElements)
-        .map(el => el.textContent?.trim())
+        .map((el: Element) => el.textContent?.trim()) // Explicitly type el as Element
         .filter(Boolean)
-        .join('\n\n')
+        .join('\n\n');
 
-      // If not enough content, fall back to other elements
       if (extractedText.length < 500) {
         const contentElements = mainContent.querySelectorAll(
           'h4, h5, h6, li, td, th, blockquote, pre, code'
-        )
+        );
         extractedText +=
           '\n\n' +
           Array.from(contentElements)
-            .map(el => el.textContent?.trim())
+            .map((el: Element) => el.textContent?.trim()) // Explicitly type el as Element
             .filter(Boolean)
-            .join('\n\n')
+            .join('\n\n');
       }
 
-      // Extract metadata
       const metaDescription =
         document
           .querySelector('meta[name="description"]')
-          ?.getAttribute('content') || ''
+          ?.getAttribute('content') || '';
       const metaKeywords =
         document
           .querySelector('meta[name="keywords"]')
-          ?.getAttribute('content') || ''
+          ?.getAttribute('content') || '';
       const ogTitle =
         document
           .querySelector('meta[property="og:title"]')
-          ?.getAttribute('content') || ''
+          ?.getAttribute('content') || '';
       const ogDescription =
         document
           .querySelector('meta[property="og:description"]')
-          ?.getAttribute('content') || ''
+          ?.getAttribute('content') || '';
 
-      // Combine metadata with extracted text
-      extractedText = `${result.title}\n\n${ogTitle}\n\n${metaDescription}\n\n${ogDescription}\n\n${metaKeywords}\n\n${extractedText}`
+      extractedText = `${result.title}\n\n${ogTitle}\n\n${metaDescription}\n\n${ogDescription}\n\n${metaKeywords}\n\n${extractedText}`;
 
-      // Limit the extracted text to 10000 characters
-      extractedText = extractedText.substring(0, 10000)
+      extractedText = extractedText.substring(0, 10000);
 
-      // Highlight query terms in the content
-      result.content = highlightQueryTerms(extractedText, query)
+      result.content = highlightQueryTerms(extractedText, query);
 
-      // Extract publication date
-      const publishedDate = extractPublicationDate(document)
+      const publishedDate = extractPublicationDate(document);
       if (publishedDate) {
-        result.publishedDate = publishedDate.toISOString()
+        result.publishedDate = publishedDate.toISOString();
       }
     }
 
-    return result
+    return result;
   } catch (error) {
-    console.error(`Error crawling ${result.url}:`, error)
+    console.error(`Error crawling ${result.url}:`, error);
     return {
       ...result,
-      content: result.content || 'Content unavailable due to crawling error.'
-    }
+      content: result.content || 'Content unavailable due to crawling error.',
+    };
   }
 }
 
