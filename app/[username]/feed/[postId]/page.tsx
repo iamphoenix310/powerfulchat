@@ -1,17 +1,23 @@
-import FeedPostCardClient from "@/components/Feed/FeedPostClient"
-import { client, urlFor } from "@/app/utils/sanityClient"
-import { notFound } from "next/navigation"
-import { Metadata } from "next"
-import { getServerSession } from "next-auth"
 import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions"
+import { client, urlFor } from "@/app/utils/sanityClient"
+import FeedPostCardClient from "@/components/Feed/FeedPostClient"
+import type { Metadata, ResolvingMetadata } from "next"
+import { getServerSession } from "next-auth"
+import { notFound } from "next/navigation"
 
 export const dynamic = "force-dynamic"
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { username: string; postId: string }
-}): Promise<Metadata> {
+type Props = {
+  params: {
+    username: string
+    postId: string
+  }
+}
+
+export async function generateMetadata(
+  { params }: Props,
+  _parent?: ResolvingMetadata
+): Promise<Metadata> {
   const { username, postId } = params
 
   const query = `*[_type == "userFeed" && _id == $postId && author->username == $username][0]{
@@ -23,7 +29,7 @@ export async function generateMetadata({
       profileImage
     }
   }`
-// ok
+
   const post = await client.fetch(query, { postId, username })
 
   if (!post) return {}
@@ -64,13 +70,7 @@ export async function generateMetadata({
   }
 }
 
-
-
-export default async function FeedPostPage({
-  params,
-}: {
-  params: { username: string; postId: string }
-}) {
+export default async function FeedPostPage({ params }: Props) {
   const { username, postId } = params
   const session = await getServerSession(authOptions)
 
