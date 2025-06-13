@@ -5,7 +5,6 @@ import { CHAT_ID } from '@/lib/constants'
 import type { SearchResults as TypeSearchResults } from '@/lib/types'
 import { useChat } from '@ai-sdk/react'
 import { ToolInvocation } from 'ai'
-import { AnswerSection } from './answer-section'
 import { CollapsibleMessage } from './collapsible-message'
 import { SearchSkeleton } from './default-skeleton'
 import { SearchResults } from './search-results'
@@ -89,15 +88,7 @@ export function SearchSection({
           <Section title="Sources">
             <SearchResults results={searchResults.results} />
           </Section>
-            <AnswerSection
-              content={(tool as any)?.result?.text || ''}
-              isOpen={true}
-              onOpenChange={() => {}}
-              messageId={tool.toolCallId}
-              chatId={CHAT_ID}
-              citationMap={citationMap}
-              modelId={modelId}
-            />
+
         </>
       ) : null}
     </CollapsibleMessage>
