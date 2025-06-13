@@ -1,43 +1,53 @@
-import { client } from '@/app/utils/sanityClient'
-import { generateMetadataFromPrompt } from '@/app/actions/generateMetadataFromPrompt'
-import ImageUploadForm from '@/components/ImageDetails/imageUploadForm'
+import { generateMetadataFromPrompt } from '@/app/actions/generateMetadataFromPrompt';
+import { client } from '@/app/utils/sanityClient';
+import ImageUploadForm from '@/components/ImageDetails/imageUploadForm';
 
 interface Props {
-  params: { id: string }
+  params: Promise<{ id: string }>;
 }
 
 export default async function PublishPage({ params }: Props) {
-  const image = await client.fetch(
-    `*[_type == "imageGeneration" && _id == $id][0]{
-      _id,
-      prompt,
-      "imageUrl": image.asset->url,
-      image,
-    }`,
-    { id: params.id }
-  )
-  
+  const { id } = await params; // Await params
+
+  let image;
+  try {
+    image = await client.fetch(
+      `*[_type == "imageGeneration" && _id == $id][0]{
+        _id,
+        prompt,
+        "imageUrl": image.asset->url,
+        image,
+      }`,
+      { id }
+    );
+  } catch (error) {
+    console.error('Sanity fetch error:', error);
+    return (
+      <div className="p-8 text-red-600">
+        Error: Failed to fetch image data from Sanity.
+      </div>
+    );
+  }
 
   if (!image || !image.prompt || !image.image || !image.image.asset) {
     return (
       <div className="p-8 text-red-600">
         Error: This image is missing required data (prompt or image).
       </div>
-    )
+    );
   }
-  
 
-  let metadata
+  let metadata;
   try {
-    metadata = await generateMetadataFromPrompt(image.prompt)
+    metadata = await generateMetadataFromPrompt(image.prompt);
   } catch (err) {
-    console.error('OpenAI metadata generation failed:', err)
+    console.error('OpenAI metadata generation failed:', err);
     metadata = {
       title: '',
       description: '',
       tags: [],
       alt: '',
-    }
+    };
   }
 
   return (
@@ -55,5 +65,5 @@ export default async function PublishPage({ params }: Props) {
         }}
       />
     </div>
-  )
+  );
 }
