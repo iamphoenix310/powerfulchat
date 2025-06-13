@@ -274,14 +274,14 @@ async function crawlPage(result: SearXNGResult, query: string): Promise<SearXNGR
 
     if (mainContent) {
       const primary = mainContent.querySelectorAll('h1, h2, h3, p')
-      let extracted = Array.from(primary)
+      let extracted = Array.from(primary as NodeListOf<Element>)
         .map(el => el.textContent?.trim())
         .filter(Boolean)
         .join('\n\n')
 
       if (extracted.length < 500) {
         const secondary = mainContent.querySelectorAll('h4, h5, h6, li, td, th, blockquote, pre, code')
-        extracted += '\n\n' + Array.from(secondary)
+        extracted += '\n\n' + Array.from(secondary as NodeListOf<Element>)
           .map(el => el.textContent?.trim())
           .filter(Boolean)
           .join('\n\n')
