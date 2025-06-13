@@ -1,7 +1,7 @@
 import { client as sanityClient } from '@/app/utils/sanityClient'
 import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import ffmpegPathPkg from 'ffmpeg-static'
+import ffmpegPathPkg from 'ffmpeg-static'; // Installed
 import ffmpeg from 'fluent-ffmpeg'
 import { createWriteStream, promises as fsPromises } from 'fs'
 import { NextRequest, NextResponse } from 'next/server'
