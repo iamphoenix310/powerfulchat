@@ -56,7 +56,7 @@ export async function getModels(): Promise<Model[]> {
           .map((m: Model) => ({
             ...m,
             isFree: isFreeModel(m),
-            defaultModel: m.id === 'gemini-2.0-flash' // ✅ This sets default
+            defaultModel: m.id === 'gpt-4.1-mini' // ✅ This sets default
           }))
       }
     } catch (error: any) {
