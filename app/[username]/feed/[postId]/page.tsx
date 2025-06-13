@@ -1,69 +1,10 @@
 import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions"
-import { client, urlFor } from "@/app/utils/sanityClient"
+import { client } from "@/app/utils/sanityClient"
 import FeedPostCardClient from "@/components/Feed/FeedPostClient"
-import { Metadata, ResolvingMetadata } from "next"
 import { getServerSession } from "next-auth"
 import { notFound } from "next/navigation"
 
 export const dynamic = "force-dynamic"
-
-export async function generateMetadata(
-  { params }: { params: { username: string; postId: string } },
-  _parent: ResolvingMetadata // ✅ just include it, even if unused
-): Promise<Metadata> {
-  const { username, postId } = params
-
-  const query = `*[_type == "userFeed" && _id == $postId && author->username == $username][0]{
-    text,
-    image,
-    linkPreview,
-    author->{
-      username,
-      profileImage
-    }
-  }`
-// ok
-  const post = await client.fetch(query, { postId, username })
-
-  if (!post) return {}
-
-  const { text, linkPreview } = post
-
-  const fallbackDescription =
-    linkPreview?.title ||
-    "Shared a link on Powerful"
-
-  const ogImage = post.image
-    ? urlFor(post.image, { width: 1200, height: 630 })
-    : post.author?.profileImage?.asset
-    ? urlFor(post.author.profileImage, { width: 1200, height: 630 })
-    : "https://visitpowerful.com/default-og-image.jpg"
-
-  return {
-    title: `Post by ${post.author.username}`,
-    description: text?.slice(0, 160) || fallbackDescription,
-    openGraph: {
-      title: `Post by ${post.author.username}`,
-      description: text?.slice(0, 160) || fallbackDescription,
-      images: [
-        {
-          url: ogImage,
-          width: 1200,
-          height: 630,
-          alt: `Post by ${post.author.username}`,
-        },
-      ],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: `Post by ${post.author.username}`,
-      description: text?.slice(0, 160) || fallbackDescription,
-      images: [ogImage],
-    },
-  }
-}
-
-
 
 export default async function FeedPostPage({
   params,
