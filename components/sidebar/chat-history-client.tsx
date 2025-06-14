@@ -126,9 +126,13 @@ export function ChatHistoryClient() {
           </div>
         ) : (
           <SidebarMenu>
-            {chats.map(
-              (chat: Chat) => chat && <ChatMenuItem key={chat.id} chat={chat} />
-            )}
+            {Array.from(
+                new Map(chats.map(chat => [chat.id, chat])).values()
+              )
+                .filter((chat): chat is Chat => Boolean(chat && chat.id))
+                .map((chat: Chat) => (
+                  <ChatMenuItem key={chat.id} chat={chat} />
+                ))}
           </SidebarMenu>
         )}
         <div ref={loadMoreRef} style={{ height: '1px' }} />

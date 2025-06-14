@@ -1,5 +1,6 @@
 'use client'
 
+import { chatModes } from '@/lib/config/personas/chatmode'
 import { CHAT_ID } from '@/lib/constants'
 import { Model } from '@/lib/types/models'
 import { cn } from '@/lib/utils'
@@ -23,12 +24,14 @@ export function Chat({
   id,
   savedMessages = [],
   query,
-  models
+  models,
+  mode
 }: {
   id: string
   savedMessages?: Message[]
   query?: string
   models?: Model[]
+  mode?: string // ✅ Add this
 }) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [isAtBottom, setIsAtBottom] = useState(true)
@@ -50,7 +53,8 @@ export function Chat({
     initialMessages: savedMessages,
     id: CHAT_ID,
     body: {
-      id
+      id,
+      mode
     },
     onFinish: () => {
       window.history.replaceState({}, '', `/search/${id}`)
@@ -64,6 +68,8 @@ export function Chat({
   })
 
   const isLoading = status === 'submitted' || status === 'streaming'
+  const currentMode = chatModes.find(m => m.id === mode) ?? chatModes[0]
+
 
   // Convert messages array to sections array
   const sections = useMemo<ChatSection[]>(() => {
@@ -201,6 +207,13 @@ export function Chat({
   }
 
   return (
+    <>
+      {currentMode?.id !== 'default' && (
+      <div className="absolute top-4 right-4 z-10 px-3 py-1 rounded-full text-xs bg-zinc-800 text-white shadow">
+        {currentMode.icon} {currentMode.name} Mode
+      </div>
+      )}
+
     <div
       className={cn(
         'relative flex h-full min-w-0 flex-1 flex-col',
@@ -229,6 +242,7 @@ export function Chat({
         stop={stop}
         query={query}
         append={append}
+        mode={mode}
         images={images}
         setImages={setImages}
         models={models}
@@ -236,5 +250,6 @@ export function Chat({
         scrollContainerRef={scrollContainerRef}
       />
     </div>
+    </>
   )
 }

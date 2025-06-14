@@ -1,3 +1,4 @@
+// app/api/chats/route.ts
 import { getChatsPage } from '@/lib/actions/chat'
 import { getCurrentUserId } from '@/lib/auth/get-current-user'
 import { type Chat } from '@/lib/types'

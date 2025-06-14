@@ -116,9 +116,15 @@ export function ChatMenuItem({ chat }: ChatMenuItemProps) {
         className="h-auto flex-col gap-0.5 items-start p-2 pr-8"
       >
         <Link href={chat.path}>
-          <div className="text-xs font-medium truncate select-none w-full">
-            {chat.title}
-          </div>
+         <div className="text-xs font-medium truncate select-none w-full">
+          {chat.title}
+          {chat.mode && (
+            <span className="ml-2 inline-block rounded-full px-2 py-0.5 text-[10px] bg-blue-100 text-blue-700 uppercase">
+              {chat.mode}
+            </span>
+          )}
+        </div>
+
           <div className="text-xs text-muted-foreground w-full">
             {formatDateWithTime(chat.createdAt)}
           </div>

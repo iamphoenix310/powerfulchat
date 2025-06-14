@@ -2,11 +2,19 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 import { getCurrentUserId } from '@/lib/auth/get-current-user'
-import { createManualToolStreamResponse } from '@/lib/streaming/create-manual-tool-stream'
-import { createToolCallingStreamResponse } from '@/lib/streaming/create-tool-calling-stream'
-import { Model } from '@/lib/types/models'
+import { getRedisClient } from '@/lib/redis/config'
 import { isProviderEnabled } from '@/lib/utils/registry'
 import { cookies } from 'next/headers'
+
+import { createListenerStreamResponse } from '@/lib/streaming/create-listener-stream'
+import { createManualToolStreamResponse } from '@/lib/streaming/create-manual-tool-stream'
+import { createToolCallingStreamResponse } from '@/lib/streaming/create-tool-calling-stream'
+// Future mode imports can go here:
+// import { createTutorStreamResponse } from '@/lib/streaming/create-tutor-stream'
+// import { createFunnyStreamResponse } from '@/lib/streaming/create-funny-stream'
+
+import type { BaseStreamConfig } from '@/lib/streaming/types'
+import { Model } from '@/lib/types/models'
 
 export const maxDuration = 30
 
@@ -17,6 +25,13 @@ const DEFAULT_MODEL: Model = {
   providerId: 'openai',
   enabled: true,
   toolCallType: 'native'
+}
+
+// Mode handlers map for scalable multi-mode support
+const modeHandlers: Record<string, (config: BaseStreamConfig) => Response | Promise<Response>> = {
+  listener: createListenerStreamResponse,
+  // tutor: createTutorStreamResponse,
+  // funny: createFunnyStreamResponse
 }
 
 export async function POST(req: Request) {
@@ -60,8 +75,24 @@ export async function POST(req: Request) {
       )
     }
 
-    
+    // ✅ Get mode from Redis
+    const redis = await getRedisClient()
+    const chatData = await redis.hgetall<Record<string, any>>(`chat:${chatId}`)
+    const chatMode = chatData?.mode || 'default'
 
+    // ✅ If chatMode handler exists, use it
+    const modeHandler = modeHandlers[chatMode]
+    if (modeHandler) {
+      return modeHandler({
+        messages,
+        model: selectedModel,
+        chatId,
+        searchMode,
+        userId
+      })
+    }
+
+    // ✅ Default fallback to tool-calling/manual stream
     const supportsToolCalling = selectedModel.toolCallType === 'native'
 
     return supportsToolCalling

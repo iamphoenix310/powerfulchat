@@ -12,12 +12,12 @@ import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import Textarea from "react-textarea-autosize"
 import { useArtifact } from "./artifact/artifact-context"
+import ChatModeSelector from "./chat/chat-mode-selector"
 import { EmptyScreen } from "./empty-screen"
 import { ModelSelector } from "./model-selector"
 import { SearchModeToggle } from "./search-mode-toggle"
 import { Button } from "./ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
-
 
 interface ChatPanelProps {
   input: string
@@ -35,6 +35,7 @@ interface ChatPanelProps {
   /** Reference to the scroll container */
   scrollContainerRef: React.RefObject<HTMLDivElement>
   images: File[]
+  mode?: string
   setImages: (files: File[]) => void
 }
 
@@ -51,6 +52,7 @@ export function ChatPanel({
   models,
   showScrollToBottomButton,
   scrollContainerRef,
+  mode
 }: ChatPanelProps) {
   const [showEmptyScreen, setShowEmptyScreen] = useState(false)
   const router = useRouter()
@@ -60,6 +62,7 @@ export function ChatPanel({
   const [isComposing, setIsComposing] = useState(false) // Composition state
   const [enterDisabled, setEnterDisabled] = useState(false) // Disable Enter after composition ends
   const { close: closeArtifact } = useArtifact()
+  const [chatMode, setChatMode] = useState('default')
   const { recording, waveProgress, startRecording, stopRecording } = useAudioRecorder({
   onTranscribe: (text: string) => {
     // Instead of append, just set input value!
@@ -330,11 +333,16 @@ useEffect(() => {
                   {isLoading ? <Square size={20} /> : <ArrowUp size={20} />}
                 </Button>
               </div>
-
-
           </div>
         </div>
-
+        {(!mode || mode === 'default') && (
+            <div className="mt-2">
+              <ChatModeSelector
+                initial="default"
+                onChange={(id) => router.push(`/chat/new?mode=${id}`)}
+              />
+            </div>
+          )}
         <div className="relative">
           {messages.length === 0 && (
             <div className="absolute top-0 left-0 right-0 min-h-[120px] max-h-[200px] overflow-hidden">
@@ -357,9 +365,7 @@ useEffect(() => {
                     input.trim().length > 0 ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none',
                     'transition-opacity duration-200'
                   )}
-
                 />
-
             </div>
           )}
           {/* Spacer to maintain layout stability */}

@@ -1,3 +1,4 @@
+// lib/streaming/handle-stream-finish.ts
 import { getChat, saveChat } from '@/lib/actions/chat'
 import { generateRelatedQuestions } from '@/lib/agents/generate-related-questions'
 import { ExtendedCoreMessage } from '@/lib/types'
@@ -13,6 +14,7 @@ interface HandleStreamFinishParams {
   userId: string
   skipRelatedQuestions?: boolean
   annotations?: ExtendedCoreMessage[]
+  mode?: string
 }
 
 export async function handleStreamFinish({
@@ -22,6 +24,7 @@ export async function handleStreamFinish({
   chatId,
   dataStream,
   userId,
+  mode,
   skipRelatedQuestions = false,
   annotations = []
 }: HandleStreamFinishParams) {
@@ -70,13 +73,21 @@ export async function handleStreamFinish({
       return
     }
 
+    const firstUserMessage = originalMessages.find(m => m.role === 'user')
+    const safeTitle =
+      typeof firstUserMessage?.content === 'string'
+        ? firstUserMessage.content.slice(0, 50)
+        : 'Untitled'
+
+
     // Get the chat from the database if it exists, otherwise create a new one
     const savedChat = (await getChat(chatId, userId)) ?? {
       messages: [],
       createdAt: new Date(),
       userId: userId,
-      path: `/search/${chatId}`,
-      title: originalMessages[0].content,
+      mode: mode || 'default',
+      path: `/chat/${mode || 'default'}/${chatId}`, // 🛠 fixed path
+      title: safeTitle,
       id: chatId
     }
 
@@ -84,7 +95,9 @@ export async function handleStreamFinish({
     await saveChat(
       {
         ...savedChat,
-        messages: generatedMessages
+        messages: generatedMessages,
+        mode: mode || savedChat.mode || 'default',
+        path: `/chat/${mode || savedChat.mode || 'default'}/${chatId}`
       },
       userId
     ).catch(error => {

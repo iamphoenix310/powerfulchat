@@ -63,6 +63,7 @@ export function createToolCallingStreamResponse(config: BaseStreamConfig) {
               chatId,
               dataStream,
               userId,
+              mode: config.mode,
               skipRelatedQuestions: shouldSkipRelatedQuestions
             })
           }

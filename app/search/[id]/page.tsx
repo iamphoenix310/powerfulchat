@@ -34,7 +34,7 @@ export default async function SearchPage({ params }: { params: Promise<{ id: str
 
   return (
     <Suspense fallback={<DefaultSkeleton />}>
-      <Chat id={id} savedMessages={messages} models={models} />
+      <Chat id={id} savedMessages={messages} models={models} mode={chat.mode || 'default'} />
     </Suspense>
   )
 }

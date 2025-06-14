@@ -71,7 +71,8 @@ export function createManualToolStreamResponse(config: BaseStreamConfig) {
               dataStream,
               userId,
               skipRelatedQuestions: true,
-              annotations
+              annotations,
+              mode: config.mode
             })
           },
           onChunk(event) {
