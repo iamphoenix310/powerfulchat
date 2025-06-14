@@ -88,7 +88,8 @@ export async function POST(req: Request) {
         model: selectedModel,
         chatId,
         searchMode,
-        userId
+        userId,
+        mode: chatMode
       })
     }
 
@@ -101,14 +102,16 @@ export async function POST(req: Request) {
           model: selectedModel,
           chatId,
           searchMode,
-          userId
+          userId,
+          mode: chatMode
         })
       : createManualToolStreamResponse({
           messages,
           model: selectedModel,
           chatId,
           searchMode,
-          userId
+          userId,
+          mode: chatMode
         })
   } catch (error) {
     console.error('API route error:', error)
