@@ -89,6 +89,17 @@ export function SearchSection({
             <SearchResults results={searchResults.results} />
           </Section>
 
+          {/* <Section title="Summary">
+            <AnswerSection
+              content={(tool as any)?.result?.text || ''}
+              isOpen={true}
+              onOpenChange={() => {}}
+              messageId={tool.toolCallId}
+              chatId={CHAT_ID}
+              citationMap={citationMap}
+              modelId={modelId}
+            />
+          </Section> */}
         </>
       ) : null}
     </CollapsibleMessage>

@@ -138,16 +138,25 @@ export function RenderMessage({
                   )
                 case 'text':
                   return (
-                    <AnswerSection
+                    <div
                       key={`${messageId}-text-${index}`}
-                      content={part.text}
-                      isOpen={getIsOpen(messageId)}
-                      onOpenChange={open => onOpenChange(messageId, open)}
-                      chatId={chatId}
-                      showActions={isLastPart}
-                      messageId={messageId}
-                      reload={reload}
-                    />
+                      className="flex items-start gap-3 mb-4"
+                    >
+                      <img
+                        src="/images/logo-main.png"
+                        alt="Powerful"
+                        className="w-6 h-6 mt-1"
+                      />
+                      <AnswerSection
+                        content={part.text}
+                        isOpen={getIsOpen(messageId)}
+                        onOpenChange={open => onOpenChange(messageId, open)}
+                        chatId={chatId}
+                        showActions={isLastPart}
+                        messageId={messageId}
+                        reload={reload}
+                      />
+                    </div>
                   )
                 case 'reasoning':
                   return (
@@ -166,6 +175,15 @@ export function RenderMessage({
               }
             })
           ) : message.role === 'assistant' ? (
+            <div
+              key={`${messageId}-fallback`}
+              className="flex items-start gap-3 mb-4"
+            >
+              <img
+                src="/images/logo-main.png"
+                alt="Powerful"
+                className="w-6 h-6 mt-1"
+              />
             <AnswerSection
               key={`${messageId}-fallback`}
               content={typeof message.content === 'string' ? message.content : ''}
@@ -176,6 +194,7 @@ export function RenderMessage({
               messageId={messageId}
               reload={reload}
             />
+            </div>
           ) : null}
 
 
