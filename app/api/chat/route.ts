@@ -23,7 +23,7 @@ const DEFAULT_MODEL: Model = {
 
 export async function POST(req: Request) {
   try {
-    const { messages, id: chatId } = await req.json()
+    const { messages, id: chatId, mode: requestedMode } = await req.json()
     const referer = req.headers.get('referer')
     const isSharePage = referer?.includes('/share/')
     const userId = await getCurrentUserId()
@@ -65,7 +65,11 @@ export async function POST(req: Request) {
     // ✅ Get mode from Redis
     const redis = await getRedisClient()
     const chatData = await redis.hgetall<Record<string, any>>(`chat:${chatId}`)
-    const chatMode = chatData?.mode || 'default'
+    let chatMode = chatData?.mode || requestedMode || 'default'
+
+    if (!chatData?.mode && requestedMode) {
+      await redis.hmset(`chat:${chatId}`, { mode: requestedMode })
+    }
 
   // ✅ Dynamically pick the correct agent/stream handler
   const handler = getAgentForMode(chatMode)

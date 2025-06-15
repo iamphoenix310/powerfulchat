@@ -51,12 +51,17 @@ export default function ChatModeSelector({
             <button
               key={mode.id}
               onClick={() => {
+                if (mode.id === 'default') return
                 setSelectedId(mode.id)
                 onChange(mode.id)
                 setOpen(false)
-                router.push(`/chat/new?mode=${mode.id}`) // ✅ Better than window.location.href
+                router.push(`/chat/new?mode=${mode.id}`)
               }}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-700"
+              disabled={mode.id === 'default'}
+              className={
+                'w-full text-left px-3 py-2 text-sm hover:bg-gray-700 ' +
+                (mode.id === 'default' ? 'cursor-default opacity-50' : '')
+              }
             >
               {mode.icon && <span className="mr-2">{mode.icon}</span>}
               {mode.name}
