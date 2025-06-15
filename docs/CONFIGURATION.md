@@ -91,6 +91,14 @@ SEARXNG_LIMITER=false  # Enable to limit requests per IP
 - `SEARXNG_CRAWL_MULTIPLIER`: In advanced mode, determines how many results to crawl
   - Example: If `MAX_RESULTS=10` and `CRAWL_MULTIPLIER=4`, up to 40 results will be crawled
 
+#### Search Result Caching
+
+To speed up repeated queries, basic search results are cached in memory. You can control the cache duration with `SEARCH_CACHE_TTL_MS` (default is 300000 ms).
+
+```bash
+SEARCH_CACHE_TTL_MS=300000
+```
+
 #### Customizing SearXNG
 
 You can modify `searxng-settings.yml` to:
