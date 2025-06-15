@@ -86,9 +86,13 @@ export async function handleStreamFinish({
       createdAt: new Date(),
       userId: userId,
       mode: mode || 'default',
-      path: `/chat/${mode || 'default'}/${chatId}`, // 🛠 fixed path
+      path: `/search/${chatId}`,
       title: safeTitle,
       id: chatId
+    }
+
+    if (!savedChat.id) {
+      savedChat.id = chatId
     }
 
     // Save chat with complete response and related questions
@@ -97,7 +101,7 @@ export async function handleStreamFinish({
         ...savedChat,
         messages: generatedMessages,
         mode: mode || savedChat.mode || 'default',
-        path: `/chat/${mode || savedChat.mode || 'default'}/${chatId}`
+        path: `/search/${chatId}`
       },
       userId
     ).catch(error => {
