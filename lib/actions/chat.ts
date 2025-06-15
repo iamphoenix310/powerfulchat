@@ -54,7 +54,12 @@ export async function getChats(userId?: string | null) {
           }
         }
         if (plainChat.createdAt && !(plainChat.createdAt instanceof Date)) {
-          plainChat.createdAt = new Date(plainChat.createdAt)
+          const raw = plainChat.createdAt
+          const parsed =
+            typeof raw === 'string' && /^\d+$/.test(raw)
+              ? parseInt(raw, 10)
+              : raw
+          plainChat.createdAt = new Date(parsed)
         }
         return plainChat as Chat
       })
@@ -106,7 +111,12 @@ export async function getChatsPage(
           }
         }
         if (plainChat.createdAt && !(plainChat.createdAt instanceof Date)) {
-          plainChat.createdAt = new Date(plainChat.createdAt)
+          const raw = plainChat.createdAt
+          const parsed =
+            typeof raw === 'string' && /^\d+$/.test(raw)
+              ? parseInt(raw, 10)
+              : raw
+          plainChat.createdAt = new Date(parsed)
         }
         return plainChat as Chat
       })
@@ -134,6 +144,13 @@ export async function getChat(id: string, userId: string = 'anonymous') {
     } catch (error) {
       chat.messages = []
     }
+  }
+
+  if (chat.createdAt && !(chat.createdAt instanceof Date)) {
+    const raw = chat.createdAt
+    const parsed =
+      typeof raw === 'string' && /^\d+$/.test(raw) ? parseInt(raw, 10) : raw
+    chat.createdAt = new Date(parsed)
   }
 
   // Ensure messages is always an array
