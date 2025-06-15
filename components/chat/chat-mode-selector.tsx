@@ -2,7 +2,6 @@
 
 import { chatModes } from '@/lib/config/personas/chatmode'
 import { ChevronDown } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
 export default function ChatModeSelector({
@@ -15,7 +14,6 @@ export default function ChatModeSelector({
   const [selectedId, setSelectedId] = useState(initial)
   const [open, setOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const router = useRouter()
 
   const selected = chatModes.find(m => m.id === selectedId)!
 
@@ -54,7 +52,6 @@ export default function ChatModeSelector({
                 setSelectedId(mode.id)
                 onChange(mode.id)
                 setOpen(false)
-                router.push(`/chat/new?mode=${mode.id}`)
               }}
               className={
                 mode.id === 'default'
