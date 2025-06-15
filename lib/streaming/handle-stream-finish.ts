@@ -91,6 +91,10 @@ export async function handleStreamFinish({
       id: chatId
     }
 
+    if (!savedChat.id) {
+      savedChat.id = chatId
+    }
+
     // Save chat with complete response and related questions
     await saveChat(
       {

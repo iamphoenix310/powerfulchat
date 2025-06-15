@@ -14,6 +14,7 @@ export default async function NewChatPage(props: {
 
   // Save chat metadata
   await redis.hmset(`chat:${chatId}`, {
+    id: chatId,
     userId,
     mode,
     createdAt: Date.now(),
