@@ -1,8 +1,13 @@
 import { getSearchSchemaForModel } from '@/lib/schema/search'
 import { SearchResults } from '@/lib/types'
 import { getBaseUrlString } from '@/lib/utils/url'
+import { SearchCache } from '@/lib/utils/searchCache'
 import { tool } from 'ai'
 import { DEFAULT_PROVIDER, SearchProviderType, createSearchProvider } from './search/providers'
+
+const searchCache = new SearchCache<string, SearchResults>(
+  parseInt(process.env.SEARCH_CACHE_TTL_MS || '300000', 10)
+)
 
 /**
  * Creates a search tool with the appropriate schema for the given model.
@@ -31,6 +36,20 @@ export function createSearchTool(fullModel: string) {
       let searchResult: SearchResults
       const searchAPI =
         (process.env.SEARCH_API as SearchProviderType) || DEFAULT_PROVIDER
+
+      const cacheKey = JSON.stringify({
+        q: filledQuery,
+        max: effectiveMaxResults,
+        depth: effectiveSearchDepth,
+        include: include_domains,
+        exclude: exclude_domains,
+        api: searchAPI
+      })
+
+      const cached = searchCache.get(cacheKey)
+      if (cached) {
+        return cached
+      }
 
       const effectiveSearchDepthForAPI =
         searchAPI === 'searxng' &&
@@ -67,6 +86,7 @@ export function createSearchTool(fullModel: string) {
             )
           }
           searchResult = await response.json()
+          searchCache.set(cacheKey, searchResult)
         } else {
           // Use the provider factory to get the appropriate search provider
           const searchProvider = createSearchProvider(searchAPI)
@@ -77,6 +97,7 @@ export function createSearchTool(fullModel: string) {
             include_domains,
             exclude_domains
           )
+          searchCache.set(cacheKey, searchResult)
         }
       } catch (error) {
         console.error('Search API error:', error)
