@@ -36,8 +36,8 @@ export default async function NewChatPage(props: {
     path: `/search/${chatId}`
   })
 
-  // Add to user's chat list
-  await redis.zadd(`user:v2:chat:${userId}`, Date.now(), `chat:${chatId}`)
+  // // Add to user's chat list
+  // await redis.zadd(`user:v2:chat:${userId}`, Date.now(), `chat:${chatId}`)
 
   // Redirect to chat page
   redirect(`/search/${chatId}`)
