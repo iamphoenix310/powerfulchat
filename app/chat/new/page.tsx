@@ -9,7 +9,7 @@ export default async function NewChatPage(props: {
 }) {
   const { mode = 'default' } = await props.searchParams
 
-  const requestHeaders = headers()
+  const requestHeaders = await headers()
   const isPrefetch =
     requestHeaders.get('x-middleware-prefetch') === '1' ||
     requestHeaders.get('next-router-prefetch') === '1' ||
