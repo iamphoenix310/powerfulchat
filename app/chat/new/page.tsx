@@ -18,7 +18,7 @@ export default async function NewChatPage(props: {
     userId,
     mode,
     title: '',
-    createdAt: Date.now(),
+    createdAt: new Date().toISOString(),
     path: `/search/${chatId}`
   })
 
