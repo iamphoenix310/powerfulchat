@@ -6,7 +6,7 @@ import { v4 as uuid } from 'uuid'
 export default async function NewChatPage(props: {
   searchParams: Promise<{ mode?: string }>
 }) {
-  const { mode = 'default' } = await props.searchParams // ✅ this is the fix
+  const { mode = 'default' } = await props.searchParams
 
   const userId = await getCurrentUserId()
   const chatId = uuid()

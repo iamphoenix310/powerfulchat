@@ -82,7 +82,6 @@ export async function handleStreamFinish({
             .slice(0, 50)
         : 'Untitled'
 
-
     // Get the chat from the database if it exists, otherwise create a new one
     const savedChat = (await getChat(chatId, userId)) ?? {
       messages: [],
