@@ -76,9 +76,11 @@ export async function handleStreamFinish({
     const firstUserMessage = originalMessages.find(m => m.role === 'user')
     const safeTitle =
       typeof firstUserMessage?.content === 'string'
-        ? firstUserMessage.content.slice(0, 50)
+        ? firstUserMessage.content
+            .split(/[.!?\n]/)[0]
+            .trim()
+            .slice(0, 50)
         : 'Untitled'
-
 
     // Get the chat from the database if it exists, otherwise create a new one
     const savedChat = (await getChat(chatId, userId)) ?? {
@@ -89,6 +91,10 @@ export async function handleStreamFinish({
       path: `/search/${chatId}`,
       title: safeTitle,
       id: chatId
+    }
+
+    if (!savedChat.title) {
+      savedChat.title = safeTitle
     }
 
     if (!savedChat.id) {
