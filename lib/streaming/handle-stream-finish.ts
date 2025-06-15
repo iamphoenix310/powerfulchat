@@ -76,7 +76,10 @@ export async function handleStreamFinish({
     const firstUserMessage = originalMessages.find(m => m.role === 'user')
     const safeTitle =
       typeof firstUserMessage?.content === 'string'
-        ? firstUserMessage.content.slice(0, 50)
+        ? firstUserMessage.content
+            .split(/[.!?\n]/)[0]
+            .trim()
+            .slice(0, 50)
         : 'Untitled'
 
 
@@ -86,9 +89,17 @@ export async function handleStreamFinish({
       createdAt: new Date(),
       userId: userId,
       mode: mode || 'default',
-      path: `/chat/${mode || 'default'}/${chatId}`, // 🛠 fixed path
+      path: `/search/${chatId}`,
       title: safeTitle,
       id: chatId
+    }
+
+    if (!savedChat.title) {
+      savedChat.title = safeTitle
+    }
+
+    if (!savedChat.id) {
+      savedChat.id = chatId
     }
 
     // Save chat with complete response and related questions
@@ -97,7 +108,7 @@ export async function handleStreamFinish({
         ...savedChat,
         messages: generatedMessages,
         mode: mode || savedChat.mode || 'default',
-        path: `/chat/${mode || savedChat.mode || 'default'}/${chatId}`
+        path: `/search/${chatId}`
       },
       userId
     ).catch(error => {
