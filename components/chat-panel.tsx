@@ -335,14 +335,14 @@ useEffect(() => {
               </div>
           </div>
         </div>
-        {(!mode || mode === 'default') && (
-            <div className="mt-2">
-              <ChatModeSelector
-                initial="default"
-                onChange={(id) => router.push(`/chat/new?mode=${id}`)}
-              />
-            </div>
-          )}
+        {messages.length === 0 && (!mode || mode === 'default') && (
+          <div className="mt-2">
+            <ChatModeSelector
+              initial="default"
+              onChange={(id) => router.push(`/chat/new?mode=${id}`)}
+            />
+          </div>
+        )}
         <div className="relative">
           {messages.length === 0 && (
             <div className="absolute top-0 left-0 right-0 min-h-[120px] max-h-[200px] overflow-hidden">

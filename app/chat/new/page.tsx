@@ -16,11 +16,12 @@ export default async function NewChatPage(props: {
   await redis.hmset(`chat:${chatId}`, {
     userId,
     mode,
-    createdAt: Date.now()
+    createdAt: Date.now(),
+    path: `/search/${chatId}`
   })
 
   // Add to user's chat list
-  await redis.zadd(`user:v2:chat:${userId}`, Date.now(), chatId)
+  await redis.zadd(`user:v2:chat:${userId}`, Date.now(), `chat:${chatId}`)
 
   // Redirect to chat page
   redirect(`/search/${chatId}`)
